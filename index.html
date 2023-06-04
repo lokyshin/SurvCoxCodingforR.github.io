@@ -97,7 +97,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>R-Survival Tools</h1>
+    <h1>R-Survival Tools v1.0</h1>
     <div id="leftSide">
       <div id="databaseArea" class="area">
         <h2>Database Area</h2>
@@ -107,7 +107,7 @@
         <h2>Function Area</h2>
         <button onClick="genRdf()">Generate DataFrame</button>
         <button id="genRcodes" onClick="genRcodes()">Generate R Codes</button>
-        <button onClick="window.open('https://rdrr.io/snippets/embed/', '_blank');">Open R Snippets</button>
+        <button onClick="window.open('https://rdrr.io/snippets/embed/', '_blank');">Open Online R</button>
       </div>
     </div>
     <div id="rightSide">
@@ -121,11 +121,11 @@
       <p>
       Instructions: 
       <br>
-      1. Enter data in the table in the Database Area.
+      1. Enter data in the Database Area section, while keeping the variable names Patient_id, Strata, Time_to_event_month, and Event as system-reserved variables. Data entry supports copying and pasting from spreadsheets, powerful editing functions such as adding or deleting rows and columns, and double-clicking column headers to rename them in the browser.
       <br>
-      2. Click "Generate DataFrame" to generate R data frame code or "Generate R Codes" to generate full R survival analysis code.
+      2. Click "Generate DataFrame" to generate the dataset, or click "Generate R code" to generate the complete R code for survival analysis. This includes features such as survival analysis, KM curve plotting, and Cox univariate analysis. The tool will automatically summarize the research data analysis results based on the input data.
       <br>
-      3. The R codes will be shown in the R Codes Area and copied to your clipboard automatically.
+      3. Upon clicking the "Generate" button, the code will automatically be copied to the clipboard. Next, click on "Open Online R" to open the online R software, where the code can be pasted into the input box. Click "Run" to display the complete statistical analysis charts and results.
     </p>
   </div>
     <script>
