@@ -14,7 +14,7 @@ options(warn = -1)
 #定义数据集，命名为df
 df = data.frame(
     Patient_id = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20),
-    Strata = c(1,1,0,1,0,0,1,0,1,0,1,0,1,0,0,1,0,1,1,0),
+    Strata_factor = c(1,1,0,1,0,0,1,0,1,0,1,0,1,0,0,1,0,1,1,0),
     Time_to_event_month = c(2.6,9.3,8.2,16.8,7.2,17.4,14.6,18.9,9.2,16.4,2.8,4.8,13.4,12.3,19.7,14.4,8.7,13.6,0.2,7.8),
     Event = c(1,1,0,0,1,0,1,0,1,0,1,0,1,0,1,1,1,0,0,0)
 )
@@ -79,36 +79,36 @@ km_curve = ggsurvplot(fit, df,
 km_curve
 
 cat("\n分层分析\n")
-fit_Strata = survfit (surv ~ Strata, df)
+fit_Strata_factor = survfit (surv ~ Strata_factor, df)
 cat("分层的中位数\n")
-print(fit_Strata)
+print(fit_Strata_factor)
 cat("分层中位值的统计检验\n")
-survd = survdiff(surv ~ Strata, df) #分层后的中位值统计检验，必须使用该格式，不能替换成fit_Strata
+survd = survdiff(surv ~ Strata_factor, df) #分层后的中位值统计检验，必须使用该格式，不能替换成fit_Strata_factor
 survd
-survp = surv_pvalue(fit_Strata)
-Stratakmp = survp$pval
+survp = surv_pvalue(fit_Strata_factor)
+Strata_factor_kmp = survp$pval
 n = survd$n[[dimnames(survd$n)[[1]][1]]] + survd$n[[dimnames(survd$n)[[1]][2]]]
-Strata0 = dimnames(survd$n)[[1]][1]
-Strata1 = dimnames(survd$n)[[1]][2]
-samplesize_Strata0 = survd$n[[dimnames(survd$n)[[1]][1]]]
-samplesize_Strata1 = survd$n[[dimnames(survd$n)[[1]][2]]]
-obevents_strata0 = survd$obs[1]
-obevents_strata1 = survd$obs[2]
-expevents_strata0 = survd$exp[1]
-expevents_strata1 = survd$exp[2]
-table_fit_strata = summary(fit_Strata)$table
-median_strata0 = table_fit_strata[, "median"][1]
-median_strata1= table_fit_strata[, "median"][2]
-lcl_strata0 = table_fit_strata[, "0.95LCL"][1]
-ucl_strata0 = table_fit_strata[, "0.95UCL"][1]
-lcl_strata1 = table_fit_strata[, "0.95LCL"][2]
-ucl_strata1 = table_fit_strata[, "0.95UCL"][1]
-chisq_strata = survd$chisq
-pval_strata = survp$pval
-if (is.na(Stratakmp) || is.na(median_strata0) || is.na(median_strata1)) {
+Strata_factor0 = dimnames(survd$n)[[1]][1]
+Strata_factor1 = dimnames(survd$n)[[1]][2]
+samplesize_Strata_factor0 = survd$n[[dimnames(survd$n)[[1]][1]]]
+samplesize_Strata_factor1 = survd$n[[dimnames(survd$n)[[1]][2]]]
+obevents_Strata_factor0 = survd$obs[1]
+obevents_Strata_factor1 = survd$obs[2]
+expevents_Strata_factor0 = survd$exp[1]
+expevents_Strata_factor1 = survd$exp[2]
+table_fit_Strata_factor = summary(fit_Strata_factor)$table
+median_Strata_factor0 = table_fit_Strata_factor[, "median"][1]
+median_Strata_factor1= table_fit_Strata_factor[, "median"][2]
+lcl_Strata_factor0 = table_fit_Strata_factor[, "0.95LCL"][1]
+ucl_Strata_factor0 = table_fit_Strata_factor[, "0.95UCL"][1]
+lcl_Strata_factor1 = table_fit_Strata_factor[, "0.95LCL"][2]
+ucl_Strata_factor1 = table_fit_Strata_factor[, "0.95UCL"][1]
+chisq_Strata_factor = survd$chisq
+pval_Strata_factor = survp$pval
+if (is.na(Strata_factor_kmp) || is.na(median_Strata_factor0) || is.na(median_Strata_factor1)) {
   km_curves_differ = "无法进行统计推断，可能是事件结局数量太少。"
 } else {
-  if (Stratakmp < 0.05) {
+  if (Strata_factor_kmp < 0.05) {
     km_curves_differ = "经统计学推断，分层后两组中位时间【有】统计学差异！"
   } else {
     km_curves_differ = "经统计学推断，分层后两组中位时间【无】统计学差异。"
@@ -121,62 +121,62 @@ cat(
     "---------------------------", "\n",
     "总样本量        ", as.character(n), "\n",
     "---------------------------", "\n",
-    "分层因素        ", Strata0,"\n",
-    "样本数量        ", samplesize_Strata0,"\n",
-    "观测事件        ", as.character(round(obevents_strata0,3)), "\n",
-    "预期事件        ", as.character(round(expevents_strata0,3)), "\n",
-    "中位数值        ", as.character(round(median_strata0,3)), "\n",
-    "可信下限        ", as.character(round(lcl_strata0,3)),"*", "\n",
-    "可信上限        ", as.character(round(ucl_strata0,3)),"*", "\n",
+    "分层因素        ", Strata_factor0,"\n",
+    "样本数量        ", samplesize_Strata_factor0,"\n",
+    "观测事件        ", as.character(round(obevents_Strata_factor0,3)), "\n",
+    "预期事件        ", as.character(round(expevents_Strata_factor0,3)), "\n",
+    "中位数值        ", as.character(round(median_Strata_factor0,3)), "\n",
+    "可信下限        ", as.character(round(lcl_Strata_factor0,3)),"*", "\n",
+    "可信上限        ", as.character(round(ucl_Strata_factor0,3)),"*", "\n",
     "---------------------------", "\n",
-    "分层因素        ", Strata1,"\n",
-    "样本数量        ", samplesize_Strata1,"\n",
-    "观测事件        ", as.character(round(obevents_strata1,3)), "\n",
-    "预期事件        ", as.character(round(expevents_strata1,3)), "\n",
-    "中位数值        ", as.character(round(median_strata1,3)), "\n",
-    "可信下限        ", as.character(round(lcl_strata1,3)),"*", "\n",
-    "可信上限        ", as.character(round(ucl_strata1,3)),"*", "\n",
+    "分层因素        ", Strata_factor1,"\n",
+    "样本数量        ", samplesize_Strata_factor1,"\n",
+    "观测事件        ", as.character(round(obevents_Strata_factor1,3)), "\n",
+    "预期事件        ", as.character(round(expevents_Strata_factor1,3)), "\n",
+    "中位数值        ", as.character(round(median_Strata_factor1,3)), "\n",
+    "可信下限        ", as.character(round(lcl_Strata_factor1,3)),"*", "\n",
+    "可信上限        ", as.character(round(ucl_Strata_factor1,3)),"*", "\n",
     "---------------------------","\n",
     "统计量","\n",
-    "卡方数值        ", as.character(round(chisq_strata,3)), "\n",
-    "检验概率        ", as.character(round(pval_strata,3)),"#", "\n",
+    "卡方数值        ", as.character(round(chisq_Strata_factor,3)), "\n",
+    "检验概率        ", as.character(round(pval_Strata_factor,3)),"#", "\n",
     "---------------------------","\n",
     "*95%可信区间", "\n",
     "#Log-rank p value", "\n\n",
     km_curves_differ, "\n"
     )
 
-km_curve_Strata = ggsurvplot(fit_Strata, df,
+km_curve_Strata_factor = ggsurvplot(fit_Strata_factor, df,
            pval = TRUE, #添加分层对比的p值
            pval.method = TRUE, #添加p值计算方法
            conf.int = FALSE, #可信区间是否显示
            risk.table = TRUE, #添加风险表
-           risk.table.col = "strata", #根据分层更改风险表颜色
-           linetype = "strata", # 根据分层更改线型
+           risk.table.col = "Strata_factor", #根据分层更改风险表颜色
+           linetype = "Strata_factor", # 根据分层更改线型
            surv.median.line = "hv", #同时显示垂直和水平参考线
            ggtheme = theme_bw(), #更改ggplot2的主题
            palette = c("#9E006E", "#2E9FDF"),#定义颜色
-           title="Kaplan-Meier Curve by Strata", #定义图标题
+           title="Kaplan-Meier Curve by Strata_factor", #定义图标题
            ylab="Survival(%)",#定义纵坐标名称
            xlab = " Time (months)", #定义横坐标名称
            )       
-km_curve_Strata
+km_curve_Strata_factor
 
 
 cat("\nCox回归的单因素分析\n")
-StrataCox = coxph(surv ~ Strata, df) #计算sex的Cox
-StrataSum = summary(StrataCox) #总结一下
+Strata_factor_Cox = coxph(surv ~ Strata_factor, df) #计算Strata_factor的Cox
+Strata_factor_Sum = summary(Strata_factor_Cox) #总结一下
 cat("分层单因素分析结果\n")
-StrataCox
+Strata_factor_Cox
 
-nevent = StrataCox$nevent
-lrchi2 = StrataSum$logtest[1]
-lrpval = StrataSum$logtest[3]
-hr_cox = StrataSum$coefficients[2]
-z_cox = StrataSum$coefficients[4]
-p_cox = StrataSum$coefficients[5]
-lcl_cox = StrataSum$conf.int[3]
-ucl_cox = StrataSum$conf.int[4]
+nevent = Strata_factor_Cox$nevent
+lrchi2 = Strata_factor_Sum$logtest[1]
+lrpval = Strata_factor_Sum$logtest[3]
+hr_cox = Strata_factor_Sum$coefficients[2]
+z_cox = Strata_factor_Sum$coefficients[4]
+p_cox = Strata_factor_Sum$coefficients[5]
+lcl_cox = Strata_factor_Sum$conf.int[3]
+ucl_cox = Strata_factor_Sum$conf.int[4]
 if (is.na(p_cox)) {
   unicox = "无法进行单因素Cox回归分析，可能是事件结局数量太少。"
 } else {
@@ -191,7 +191,7 @@ cat(
     "\n",
     "Cox回归检验结果","\n",
     "---------------------------", "\n",
-    "样本数量        ", as.character(StrataCox$n), "\n",
+    "样本数量        ", as.character(Strata_factor_Cox$n), "\n",
     "事件数量        ", as.character(nevent), "\n",
     "---------------------------", "\n",
     "似然卡方        ", as.character(round(lrchi2,3)),"*1", "\n",
@@ -228,19 +228,19 @@ cat(
     "---------------------------", "\n",
     "---------------------------", "\n",
     "分层分析","\n",
-    "分层因素        ", Strata0,"\n",
-    "样本数量        ", samplesize_Strata0,"\n",
-    "中位数值        ", as.character(round(median_strata0,3)), "\n",
-    "可信下限        ", as.character(round(lcl_strata0,3)),"*1", "\n",
-    "可信上限        ", as.character(round(ucl_strata0,3)),"*1", "\n",
-    "分层因素        ", Strata1,"\n",
-    "样本数量        ", samplesize_Strata1,"\n",
-    "中位数值        ", as.character(round(median_strata1,3)), "\n",
-    "可信下限        ", as.character(round(lcl_strata1,3)),"*1", "\n",
-    "可信上限        ", as.character(round(ucl_strata1,3)),"*1", "\n",
+    "分层因素        ", Strata_factor0,"\n",
+    "样本数量        ", samplesize_Strata_factor0,"\n",
+    "中位数值        ", as.character(round(median_Strata_factor0,3)), "\n",
+    "可信下限        ", as.character(round(lcl_Strata_factor0,3)),"*1", "\n",
+    "可信上限        ", as.character(round(ucl_Strata_factor0,3)),"*1", "\n",
+    "分层因素        ", Strata_factor1,"\n",
+    "样本数量        ", samplesize_Strata_factor1,"\n",
+    "中位数值        ", as.character(round(median_Strata_factor1,3)), "\n",
+    "可信下限        ", as.character(round(lcl_Strata_factor1,3)),"*1", "\n",
+    "可信上限        ", as.character(round(ucl_Strata_factor1,3)),"*1", "\n",
     "统计量","\n",
-    "卡方数值        ", as.character(round(chisq_strata,3)), "\n",
-    "检验概率        ", as.character(round(pval_strata,3)),"*2", "\n",
+    "卡方数值        ", as.character(round(chisq_Strata_factor,3)), "\n",
+    "检验概率        ", as.character(round(pval_Strata_factor,3)),"*2", "\n",
     "---------------------------","\n",
     "---------------------------","\n",
     "单因素Cox回归","\n",
@@ -258,8 +258,8 @@ cat(
     "总结报告","\n",
     "1 如全人群推断总体的Kaplan-Meier曲线所示，本研究总体预后时间（Time_to_event_month）为：", as.character(median_total),"[", as.character(lcl95_total), " - ", as.character(ucl95_total), "] 月。","\n",
     "2 按照本研究Strata分层因素，两组预后时间（Time_to_event_month）分别为：", "\n",
-    "    ", Strata0, ": ", as.character(round(median_strata0,3)), "[", as.character(round(lcl_strata0,3)), " - ", as.character(round(ucl_strata0,3)), "] 月;","\n",
-    "    ", Strata1, ": ", as.character(round(median_strata1,3)), "[", as.character(round(lcl_strata1,3)), " - ", as.character(round(ucl_strata1,3)), "] 月;","\n",
+    "    ", Strata_factor0, ": ", as.character(round(median_Strata_factor0,3)), "[", as.character(round(lcl_Strata_factor0,3)), " - ", as.character(round(ucl_Strata_factor0,3)), "] 月;","\n",
+    "    ", Strata_factor1, ": ", as.character(round(median_Strata_factor1,3)), "[", as.character(round(lcl_Strata_factor1,3)), " - ", as.character(round(ucl_Strata_factor1,3)), "] 月;","\n",
     "    ", km_curves_differ, "\n",
     "3 对Strata分层因素进行单因素Cox回归时发现，", unicox, "\n"
     )
