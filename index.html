@@ -146,41 +146,6 @@
      <img src="img.png" id="bottomRightImage" />
   </div>
     <script>
-    /* Helper functions to check table content */
-    function checkTableRows() {
-      if(hot.countRows() === 1) {
-        alert('You cannot remove the last row.');
-        return false;
-      }
-      return true;
-    }
-    function checkTableCols() {
-      let colHeaders = hot.getColHeader();
-      for(let colIndex=0; colIndex<colHeaders.length; colIndex++) {
-        let colEmpty = true;
-        let skipEmptyCell = true;
-        for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
-          let cellData = hot.getDataAtCell(rowIndex, colIndex);
-          if(cellData !== null && cellData !== '') {
-            if(cellData.trim() === '') {
-              if(!skipEmptyCell) {
-                alert('Please fill the blank cells before the non-empty cells in column ' + (colIndex + 1));
-                return false;
-              }
-            } else {
-              colEmpty = false;
-              skipEmptyCell = false;
-            }
-          }
-        }
-        if(colEmpty) {
-          alert('Column ' + (colIndex + 1) + ' is empty. Please fill it or remove it.');
-          return false;
-        }
-      }
-      return true;
-    }
-    /* End of helper functions */
 
     var data = [
       ["1", "2.6", "1", "1"],
@@ -266,7 +231,7 @@
           },
         }
       },
-      minSpareRows: 1,
+      minSpareRows: 0,
       licenseKey: 'non-commercial-and-evaluation',
       afterChange: function (change, source) {
         if (source === 'loadData') {
@@ -340,7 +305,63 @@
       document.execCommand("copy");
     }
 
+    function checkTableCols() {
+      let colHeaders = hot.getColHeader();
+      for(let colIndex=0; colIndex<colHeaders.length; colIndex++) {
+        let colEmpty = true;
+        let skipEmptyCell = true;
+        for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
+          let cellData = hot.getDataAtCell(rowIndex, colIndex);
+          if(cellData !== null && cellData !== '') {
+            if(cellData.trim() === '') {
+              if(!skipEmptyCell) {
+                alert('Please fill the blank cells before the non-empty cells in column ' + (colIndex + 1));
+                return false;
+              }
+            } else {
+              colEmpty = false;
+              skipEmptyCell = false;
+            }
+          }
+        }
+        if(colEmpty) {
+          alert('Column ' + (colIndex + 1) + ' is empty. Please fill it or remove it.');
+          return false;
+        }
+      }
+      return true;
+    }
+    /* End of helper functions */
+
+    /* Helper functions to check table content */
+    function checkTableRows() {
+      if(hot.countRows() === 1) {
+        alert('You cannot do this.');
+        return false;
+      }
+      return true;
+    }
+
+    function checkTableData() {
+      let rowLength = hot.countRows();
+      let colLength = hot.countCols();
+
+      for(let rowIndex=0; rowIndex<rowLength; rowIndex++) {
+        for(let colIndex=0; colIndex<colLength; colIndex++) {
+          let cellData = hot.getDataAtCell(rowIndex, colIndex);
+          if(cellData === null || cellData === '' || isNaN(cellData)) {
+            alert('All cells must be filled with numbers. Please check the cell at row ' + (rowIndex + 1) + ' and column ' + (colIndex + 1));
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
     function genRdf() {
+      if(!checkTableCols() || !checkTableData()) {
+        return;
+      }
       let dfCode = genDataFrameCode();
       if(dfCode === null) {
         return;
@@ -350,6 +371,9 @@
     }
 
     function genRcodes() {
+      if(!checkTableCols() || !checkTableData()) {
+        return;
+      }
       let dfCode = genDataFrameCode();
       if(dfCode === null) {
         return;
