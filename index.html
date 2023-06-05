@@ -290,19 +290,25 @@
         this.updateSettings({colHeaders: colHeaders});
       },
       afterOnCellMouseDown: function(event, coords) {
-        if(coords.row === -1 && coords.col >= 4) {
+        if((coords.row === -1 && coords.col >= 4) || coords.col === 1) {
           var newName = prompt("Enter new column name:");
           if(newName !== null) {
-            var colHeaders = this.getColHeader();
-            if(colHeaders.includes(newName)) {
-              alert('This column name already exists!');
+            // Check column name for validity
+            var re = /^[A-Za-z][A-Za-z0-9_]*[A-Za-z0-9]$/;
+            if(re.test(newName) === false) {
+              alert('Column names must start with a letter and cannot contain any special characters or spaces.');
             } else {
-              colHeaders[coords.col] = newName;
-              this.updateSettings({colHeaders: colHeaders});
+              var colHeaders = this.getColHeader();
+              if(colHeaders.includes(newName)) {
+                alert('This column name already exists!');
+              } else {
+                colHeaders[coords.col] = newName;
+                this.updateSettings({colHeaders: colHeaders});
+              }
             }
           }
         }
-      }
+      },
     });
 
     function genDataFrameCode() {
@@ -350,6 +356,8 @@
       }
       var rCodes = window.Rsurv_cox;
       rCodes = rCodes.replace(/df = .*?\)\n\)/s, dfCode);
+      let colHeaders = hot.getColHeader();
+      rCodes = rCodes.replace(/Strata_factor/g, colHeaders[1]);
       document.getElementById("Rcodes_textarea").value = rCodes;        
       copyToClipboard();
     }
