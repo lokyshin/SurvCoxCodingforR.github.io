@@ -1,4 +1,4 @@
-window.Rsurv_cox = `# Code by Lokyshin (Lokyshin.net@202306041545)
+window.Rsurv_cox = `# Code by Lokyshin (Lokyshin.net@202306051232)
 # Reference
 # https://rpkgs.datanovia.com/survminer/
 # https://github.com/kassambara/survminer
@@ -166,7 +166,7 @@ km_curve_Strata
 cat("\nCox回归的单因素分析\n")
 StrataCox = coxph(surv ~ Strata, df) #计算sex的Cox
 StrataSum = summary(StrataCox) #总结一下
-cat("分层单因素分析结果")
+cat("分层单因素分析结果\n")
 StrataCox
 
 nevent = StrataCox$nevent
