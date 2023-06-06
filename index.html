@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>R-survival Tools</title>
+  <script src="handsontable.full.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="handsontable.full.min.css">
+  <script src="R_surv_cox.js"></script>  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #F2F2F2;
+      font-size: 14px;
+    }
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      margin: 0 auto;
+      position: relative;
+    }
+    body, .container {
+      background-color: transparent; /* this will make the body and container backgrounds transparent */
+    } 
+    h1 {
+      color: #336699;
+      font-size: 22px;
+      margin: 0;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    h2 {
+      color: #336699;
+      font-size: 18px;
+      margin: 0;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    h3 {
+      color: #336699;
+      font-size: 14px;
+      margin: 0;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .area {
+      margin-bottom: 20px;
+    }
+    #leftSide {
+      display: flex;
+      flex-direction: column;
+    }
+    textarea {
+      width: 100%;
+      margin-top: 20px;
+    }
+    .rightSide {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .rightSide .area {
+      width: 100%;
+    }
+    .footer {
+      font-size: 12px;
+      color: #999;
+      text-align: left;
+      margin-top: 40px;
+    }
+    #bottomRightImage {
+      position: absolute;
+      right: 0;
+      top: 0;
+      max-width: 55%;
+      max-height: 55%;
+      z-index: -1;
+    }
+    @media (max-width: 600px) {
+      .container {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+      }
+      #leftSide, .rightSide {
+        flex-direction: column;
+      }
+      .rightSide .area {
+        margin-top: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>R-Survival Tools v2023</h1>
+    <div id="leftSide">
+      <div id="databaseArea" class="area">
+        <h2>Database Area</h2>
+        <div id="hot"></div>
+      </div>
+          <div id="functionArea" class="area">
+          <h3>General Function</h>
+          <button onClick="genRdf()">Generate DataFrame</button>      
+          <button id="genRcodes" onClick="genRcodes()">Kaplan-Meier survival analysis</button>
+          <hr>
+          <h3>Univariate and Multivariate Cox regression Analysis</h3>
+          1. Select a variable: 
+          <select id="colSelect_coxuni" name="colSelect_coxuni"></select> in 
+          <button id="genRcodesCoxUni" onClick="genRcodesCoxUni()">Cox Univariate Analysis</button>
+          <p>2. Please select more than one variable from the list box below.
+          <br>
+          <select id="multiSelect_coxmulti" multiple></select> in 
+          <button id="genRcodesCoxMul" onClick="genRcodesCoxMul()">Cox Multivariate Analysis</button>
+          <hr>
+          <h3>Statistical analysis of quantitative data</h3>
+          Please perform statistical analysis on  
+          <select id="colSelect_R_des_continuous" name="colSelect_R_des_continuous"></select>
+          , grouped by
+          <select id="colSelect_R_des_continuous_by" name="colSelect_R_des_continuous_by"></select> .
+          <button id="genRcodesR_des_continuous_by_btn" onClick="genRcodesR_des_continuous_by()">Run!</button>
+          <br>
+          Kindly note that the 'analysis on' variable needs to be continuous in nature and the 'grouped by' variable must be categorical.
+          <Hr>
+          <h3>Statistical analysis of categorical data</h3>
+          Perform a statistical analysis of  
+          <select id="colSelect_R_des_count_R" name="colSelect_R_des_count_R"></select>
+          , categorized by 
+          <select id="colSelect_R_des_count_C" name="colSelect_R_des_count_C"></select> .
+          <button id="genRcodesR_des_count" onClick="genRcodesR_des_count()">Run!</button>
+          <br>
+          Note that both of these variables must be categorical variables (not ordinal variables).
+          <hr>
+          <br>
+        </div>
+    </div>
+    <div id="rightSide">
+      <div id="rcodesArea" class="area">
+        <h2>R Codes Area</h2>
+        <textarea id="Rcodes_textarea" rows="10" cols="50"></textarea>
+      </div>
+    </div>
+    <p class="footer">
+      Created by Lokyshin Zhao 2023
+      <br>
+      <br>
+      Instructions: 
+      <br>
+      1. Enter data in the Database Area section, while keeping the variable names Patient_id, Strata, Time_to_event, and Event as system-reserved variables. Data entry supports copying and pasting from spreadsheets, powerful editing functions such as adding or deleting rows and columns, and double-clicking column headers to rename them in the browser.
+      <br>
+      2. Click "Generate DataFrame" to generate the dataset, or click other button to generate the complete R code for survival analysis. This includes features such as survival analysis, KM curve plotting, and Cox univariate analysis. The tool will automatically summarize the research data analysis results based on the input data.
+      <br>
+      3. Upon clicking the "Generate" button, the code will automatically be copied to the clipboard. Next, click on "Open Online R" to open the online R software, where the code can be pasted into the input box. Click "Run" to display the complete statistical analysis charts and results.
+      <br>
+      <br>
+      Copyright(r) lokyshin.net
+    </p>
+     <img src="img.png" id="bottomRightImage" />
+  </div>
+    <script>
+
+    var data = [
+      ["1", "2.6", "1", "1"],
+      ["2", "9.3", "1", "1"],
+      ["3", "8.2", "0", "0"],
+      ["4", "12.8", "0", "1"],
+      ["5", "7.2", "1", "0"],
+      ["6", "17.4", "0", "0"],
+      ["7", "11.6", "1", "1"],
+      ["8", "17.9", "0", "0"],
+      ["9", "9.2", "1", "1"],
+      ["10", "10.4", "0", "0"],
+      ["11", "2.8", "1", "1"],
+      ["12", "4.8", "0", "0"],
+      ["13", "16.1", "1", "1"],
+      ["14", "12.3", "0", "0"],
+      ["15", "11.7", "1", "0"],
+      ["16", "9.8", "0", "0"]
+    ];
+
+    var container = document.getElementById('hot');
+    var hot = new Handsontable(container, {
+      data: data,
+      colHeaders: ["Patient_id", "Time_to_event", "Event", "Group_or_Factor_2class"],
+      contextMenu: {
+        items: {
+          "copy": {name:'Copy | Ctrl + C'},
+          "cut": {name:'Cut | Ctrl + X'},
+          "paste": {
+            name:'Paste | Please use Ctrl + V',
+            disabled: function() { 
+              return true; 
+            }
+          },
+          "undo": {name:'Undo | Ctrl + Z'},
+          "redo": {name:'Redo | Ctrl + Y'},
+          "hsep1": "---------", 
+          "col_right": {
+            disabled: function() {
+              return this.getSelectedLast()[1] < 3; // Disable "Insert column right" if first four columns are selected
+            }
+          },
+          "col_left": {
+            disabled: function() {
+              return this.getSelectedLast()[1] <= 3; // Disable "Insert column left" if first four columns are selected
+            }
+          },
+          "remove_col": {
+             name: 'Remove column',
+             disabled: function() {
+               // this.getSelectedLast() returns an array [startRow, startCol, endRow, endCol]
+               const selectedLast = this.getSelectedLast();
+               if (selectedLast) {
+                 const startCol = selectedLast[1];
+                 const endCol = selectedLast[3];
+                 // Check if any of the first four columns are selected
+                 return (startCol < 4 || endCol < 4);
+                } else {
+                  return false;
+                }
+              }
+            },
+          "hsep2": "---------",
+          "row_below": {},
+          "row_above": {},
+                    "remove_row": {
+            disabled: function() {
+              let disableRemoveRow = false;
+              let selected = this.getSelected();  // returns an array of arrays [startRow, startCol, endRow, endCol]
+              if(selected !== undefined) {
+                selected.forEach(selection => {
+                  // Iterate through each selected column
+                  for (let i = selection[1]; i <= selection[3]; i++) {
+                    if ((selection[2] - selection[0] + 1) === hot.countRows()) {
+                      disableRemoveRow = true;
+                    }
+                  }
+                });
+              }
+              // Disable "Remove row" if all rows in any column are selected
+              return disableRemoveRow;
+            }
+          },
+        }
+      },
+      minSpareRows: 0,
+      licenseKey: 'non-commercial-and-evaluation',
+      afterChange: function (change, source) {
+        if (source === 'loadData') {
+          return; 
+        }
+        updateDropdown(); 
+      },
+      afterCreateCol: function(index, amount) {
+        var colHeaders = this.getColHeader();
+        for(var i=0; i<amount; i++) {
+          let newColName = "New_col"+(colHeaders.length+1);
+          while(colHeaders.includes(newColName)) {
+            newColName = "New_col"+(colHeaders.length+i+1);
+          }
+          colHeaders.push(newColName);
+        }
+        this.updateSettings({colHeaders: colHeaders});
+        updateDropdown(); 
+      },
+      afterRemoveCol: function(index, amount) {
+        var colHeaders = this.getColHeader();
+        colHeaders.splice(index, amount);
+        this.updateSettings({colHeaders: colHeaders});
+        updateDropdown(); 
+      },
+      afterOnCellMouseDown: function(event, coords) {
+        if((coords.row === -1 && coords.col >= 4) || (coords.row === -1 && coords.col === 3)) {
+          var newName = prompt("Enter new column name:");
+          if(newName !== null) {
+            // Check column name for validity
+            var re = /^[A-Za-z][A-Za-z0-9_]*[A-Za-z0-9]$/;
+            if(re.test(newName) === false) {
+              alert('Column names must start with a letter and cannot contain any special characters or spaces.');
+            } else {
+              var colHeaders = this.getColHeader();
+              if(colHeaders.includes(newName)) {
+                alert('This column name already exists!');
+              } else {
+                colHeaders[coords.col] = newName;
+                this.updateSettings({colHeaders: colHeaders});
+              }
+            }
+          }
+        }
+        updateDropdown(); 
+      },
+    });
+
+    function genDataFrameCode() {
+      if(!checkTableRows() || !checkTableCols()) {
+        return null;
+      }
+
+      let colHeaders = hot.getColHeader();
+      let output = 'df = data.frame(\n';
+      for(let colIndex=0; colIndex<colHeaders.length; colIndex++) {
+        let colData = '    '+colHeaders[colIndex]+' = c(';
+        for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
+          let cellData = hot.getDataAtCell(rowIndex, colIndex);
+          if(cellData !== null && cellData !== '') {
+            colData += cellData + ',';
+          }
+        }
+        colData = colData.slice(0, -1) + ')';
+        output += colData + ',\n';
+      }
+      output = output.slice(0, -2) + '\n)';
+      return output;
+    }
+
+function updateDropdown() {
+    let dropdown_coxuni = document.getElementById('colSelect_coxuni');
+    let dropdown_colSelect_R_des_continuous = document.getElementById('colSelect_R_des_continuous');
+    let dropdown_colSelect_R_des_continuous_by = document.getElementById('colSelect_R_des_continuous_by');
+    let dropdown_colSelect_R_des_count_R = document.getElementById('colSelect_R_des_count_R');
+    let dropdown_colSelect_R_des_count_C = document.getElementById('colSelect_R_des_count_C');
+    let multiSelect_coxmulti = document.getElementById('multiSelect_coxmulti');
+    let colHeaders = hot.getColHeader();
+    dropdown_coxuni.innerHTML = '';
+    dropdown_colSelect_R_des_continuous.innerHTML = '';
+    dropdown_colSelect_R_des_continuous_by.innerHTML = '';
+    multiSelect_coxmulti.innerHTML = '';
+    for(let i = 0; i < colHeaders.length; i++) {
+        let opt1 = document.createElement('option');
+        let opt2 = document.createElement('option');
+        let opt3 = document.createElement('option');
+        let opt4 = document.createElement('option');
+        let opt5 = document.createElement('option');
+        let multiOpt = document.createElement('option');
+        opt1.value = colHeaders[i];
+        opt1.innerHTML = colHeaders[i];
+        opt2.value = colHeaders[i];
+        opt2.innerHTML = colHeaders[i];
+        opt3.value = colHeaders[i];
+        opt3.innerHTML = colHeaders[i];
+        opt4.value = colHeaders[i];
+        opt4.innerHTML = colHeaders[i];
+        opt5.value = colHeaders[i];
+        opt5.innerHTML = colHeaders[i];
+        multiOpt.value = colHeaders[i];
+        multiOpt.innerHTML = colHeaders[i];
+        dropdown_coxuni.appendChild(opt1);
+        dropdown_colSelect_R_des_continuous.appendChild(opt2);
+        dropdown_colSelect_R_des_continuous_by.appendChild(opt3);
+        dropdown_colSelect_R_des_count_R.appendChild(opt4);
+        dropdown_colSelect_R_des_count_C.appendChild(opt5);
+        multiSelect_coxmulti.appendChild(multiOpt);
+    }
+}
+
+
+    function copyToClipboard() {
+      var copyText = document.getElementById("Rcodes_textarea");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+    }
+
+    function checkTableCols() {
+      let colHeaders = hot.getColHeader();
+      for(let colIndex=0; colIndex<colHeaders.length; colIndex++) {
+        let colEmpty = true;
+        let skipEmptyCell = true;
+        for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
+          let cellData = hot.getDataAtCell(rowIndex, colIndex);
+          if(cellData !== null && cellData !== '') {
+            if(cellData.trim() === '') {
+              if(!skipEmptyCell) {
+                alert('Please fill the blank cells before the non-empty cells in column ' + (colIndex + 1));
+                return false;
+              }
+            } else {
+              colEmpty = false;
+              skipEmptyCell = false;
+            }
+          }
+        }
+        if(colEmpty) {
+          alert('Column ' + (colIndex + 1) + ' is empty. Please fill it or remove it.');
+          return false;
+        }
+      }
+      return true;
+    }
+    /* End of helper functions */
+
+    /* Helper functions to check table content */
+    function checkTableRows() {
+      if(hot.countRows() === 1) {
+        alert('You cannot do this.');
+        return false;
+      }
+      return true;
+    }
+
+    function checkTableData() {
+      let rowLength = hot.countRows();
+      let colLength = hot.countCols();
+
+      for(let rowIndex=0; rowIndex<rowLength; rowIndex++) {
+        for(let colIndex=0; colIndex<colLength; colIndex++) {
+          let cellData = hot.getDataAtCell(rowIndex, colIndex);
+          if(cellData === null || cellData === '' || isNaN(cellData)) {
+            alert('All cells must be filled with numbers. Please check the cell at row ' + (rowIndex + 1) + ' and column ' + (colIndex + 1));
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function genRdf() {
+      if(!checkTableCols() || !checkTableData()) {
+        return;
+      }
+      let dfCode = genDataFrameCode();
+      if(dfCode === null) {
+        return;
+      }
+      document.getElementById('Rcodes_textarea').value = dfCode;
+      copyToClipboard();
+      alert("Well done!\nThe R codes has been copied to Clipboard");
+    }
+
+    function genRcodes() {
+      if(!checkTableCols() || !checkTableData()) {
+        return;
+      }
+      let dfCode = genDataFrameCode();
+      if(dfCode === null) {
+        return;
+      }
+      var rCodes = window.R_surv_cox;
+      rCodes = rCodes.replace(/df = .*?\)\n\)/s, dfCode);
+      let colHeaders = hot.getColHeader();
+      rCodes = rCodes.replace(/Strata_factor/g, colHeaders[3]);
+      document.getElementById("Rcodes_textarea").value = rCodes;        
+      copyToClipboard();
+      alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
+      window.open('https://rdrr.io/snippets/embed/', '_blank')
+    }
+
+    function genRcodesCoxUni() {
+        let selectedCol = document.getElementById('colSelect_coxuni').value;
+        if(!selectedCol) {
+            alert('Please select a variable.');
+            return;
+        }
+        if((selectedCol === "Patient_id") || (selectedCol === "Time_to_event") || (selectedCol === "Event") ) {
+            alert('Please avoid selecting \'Patient_id\', \'Time_to_event\', or \'Event\'.');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_coxuni = window.R_cox;
+        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_coxuni = rCodes_coxuni.replace(/Strata_factor/g, selectedCol); 
+        rCodes_coxuni = rCodes_coxuni.replace(/Cox回归分析/g, "单因素Cox回归分析"); 
+        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        copyToClipboard();   
+        alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesCoxMul() {
+        let selectElement = document.getElementById('multiSelect_coxmulti');
+        let selectedOptions = Array.from(selectElement.options)
+                                    .filter(option => option.selected)
+                                    .map(option => option.value);
+        let selected_multi = selectedOptions.join(' + ');
+
+        if (selected_multi === '' || 
+            selected_multi.includes('Patient_id') || 
+            selected_multi.includes('Time_to_event') || 
+            selected_multi.includes('Event')) {
+            alert('Please hold \'Ctrl\' or \'Command\' and select more than one binary variable and avoid selecting \'Patient_id\', \'Time_to_event\', and \'Event\'.\n\nNote that typically, a multiple factor analysis is done after single factor analysis, and variables with a corresponding Harzad ratio p-value < 0.05 need to be identified.');
+            return;
+        } 
+
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_coxuni = window.R_cox;
+        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_coxuni = rCodes_coxuni.replace(/Strata_factor/g, selected_multi); 
+        rCodes_coxuni = rCodes_coxuni.replace(/Cox回归分析/g, "多因素Cox回归分析"); 
+        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        copyToClipboard();   
+        alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesR_des_continuous_by() {
+        let selectedCol_R_des_continuous = document.getElementById('colSelect_R_des_continuous').value;
+        if(!selectedCol_R_des_continuous) {
+            alert('Select a variable.\n\nPlease perform statistical analysis on __\nin the area of Statistical anlysis of quantitative data');
+            return;
+        }
+        let selectedCol_R_des_continuous_by = document.getElementById('colSelect_R_des_continuous_by').value;
+        if(!selectedCol_R_des_continuous_by) {
+            alert('Please select a variable.\n\n... grouped by___\nin the area of Statistical anlysis of quantitative data');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_coxuni = window.R_des_continuous;
+        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_coxuni = rCodes_coxuni.replace(/RDCvariate/g, selectedCol_R_des_continuous); 
+        rCodes_coxuni = rCodes_coxuni.replace(/RDCgroup/g, selectedCol_R_des_continuous_by); 
+        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        copyToClipboard();   
+        alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesR_des_count() {
+        let selectedCol_R_des_count_R = document.getElementById('colSelect_R_des_count_R').value;
+        if(!selectedCol_R_des_count_R) {
+            alert('Please select a variable.\n\nNote that both of these variables must be categorical variables (not ordinal variables).\nin the area of Statistical analysis of categorical data');
+            return;
+        }
+        let selectedCol_R_des_count_C = document.getElementById('colSelect_R_des_count_C').value;
+        if(!selectedCol_R_des_count_C) {
+            alert('Please select a variable.\n\nNote that both of these variables must be categorical variables (not ordinal variables).\nin the area of Statistical analysis of categorical data');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_coxuni = window.R_des_count;
+        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_coxuni = rCodes_coxuni.replace(/RD_characteristic/g, selectedCol_R_des_count_R); 
+        rCodes_coxuni = rCodes_coxuni.replace(/RD_classfication/g, selectedCol_R_des_count_C); 
+        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        copyToClipboard();   
+        alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    updateDropdown(); 
+  </script>
+</body>
+</html>
