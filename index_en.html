@@ -343,9 +343,14 @@ function updateDropdown() {
     let dropdown_colSelect_R_des_ranked_C = document.getElementById('colSelect_R_des_ranked_C');
     let multiSelect_coxmulti = document.getElementById('multiSelect_coxmulti');
     let colHeaders = hot.getColHeader();
+    dropdown_strata_or_group.innerHTML = '';
     dropdown_coxuni.innerHTML = '';
     dropdown_colSelect_R_des_continuous.innerHTML = '';
     dropdown_colSelect_R_des_continuous_by.innerHTML = '';
+    dropdown_colSelect_R_des_count_R.innerHTML = '';
+    dropdown_colSelect_R_des_count_C.innerHTML = '';
+    dropdown_colSelect_R_des_ranked_R.innerHTML = '';
+    dropdown_colSelect_R_des_ranked_C.innerHTML = '';
     multiSelect_coxmulti.innerHTML = '';
     for(let i = 0; i < colHeaders.length; i++) {
         let opt1 = document.createElement('option');
