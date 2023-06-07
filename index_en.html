@@ -108,8 +108,8 @@
           <h3>General Function</h>
           <p>
           <button onClick="genRdf()">Generate DataFrame</button> or      
-          <button id="genRcodes_strata_or_group" onClick="genRcodes_strata_or_group()">Kaplan-Meier survival analysis for all patients and by :</button>
-          <select id="colSelect_strata_or_group" name="colSelect_strata_or_group"></select>.
+          <button id="genRcodes_strata_or_group" onClick="genRcodes_strata_or_group()">Kaplan-Meier survival analysis for all patients and by </button>
+          <select id="colSelect_strata_or_group" name="colSelect_strata_or_group"></select>
           <hr>
           <h3>Univariate and Multivariate Cox regression Analysis</h3>
           1. Select a variable: 
@@ -125,7 +125,7 @@
           Please perform statistical analysis on  
           <select id="colSelect_R_des_continuous" name="colSelect_R_des_continuous"></select>
           , grouped by
-          <select id="colSelect_R_des_continuous_by" name="colSelect_R_des_continuous_by"></select> .
+          <select id="colSelect_R_des_continuous_by" name="colSelect_R_des_continuous_by"></select> 
           <button id="genRcodesR_des_continuous_by_btn" onClick="genRcodesR_des_continuous_by()">Run!</button>
           <br>
           Kindly note that the 'analysis on' variable needs to be continuous in nature and the 'grouped by' variable must be categorical.
@@ -135,7 +135,7 @@
           Perform a statistical analysis of  
           <select id="colSelect_R_des_count_R" name="colSelect_R_des_count_R"></select>
           , categorized by 
-          <select id="colSelect_R_des_count_C" name="colSelect_R_des_count_C"></select> .
+          <select id="colSelect_R_des_count_C" name="colSelect_R_des_count_C"></select> 
           <button id="genRcodesR_des_count" onClick="genRcodesR_des_count()">Run!</button>
           <br>
           Note that both of these variables must be categorical variables (not ranked variables).
@@ -145,7 +145,7 @@
           Perform a statistical analysis of (ranked) 
           <select id="colSelect_R_des_ranked_R" name="colSelect_R_des_ranked_R"></select>
           , categorized by 
-          <select id="colSelect_R_des_ranked_C" name="colSelect_R_des_ranked_C"></select> .
+          <select id="colSelect_R_des_ranked_C" name="colSelect_R_des_ranked_C"></select> 
           <button id="genRcodesR_des_ranked" onClick="genRcodesR_des_ranked()">Run!</button>
           <br>
           Note that the data being analyzed needs to be ordinal variables (not categorical variables).
