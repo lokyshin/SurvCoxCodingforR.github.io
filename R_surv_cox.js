@@ -537,6 +537,19 @@ if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (un
   }
 }
 
+# 绘图箱图
+# 将RDCgroup列转换为因子类型
+df$RDCgroup <- as.factor(df$RDCgroup)
+# 创建箱图
+ggplot(df, aes(x=RDCgroup, y=RDCvariate, fill=RDCgroup)) +
+    geom_boxplot() +
+    labs(title="Boxplot of RDCvariate by Group", 
+         x="Group", 
+         y="RDCvariate",
+         fill="Group") +
+    theme_minimal()
+cat("\\n\n您可在下方查看分组数据的箱图。", "\\n")    
+
 cat("\\n\\n感谢您使用本程序进行统计分析，再见。", "\\n")
 `;
 
@@ -685,3 +698,154 @@ if(kruskal_p < 0.05){
 cat("\\n感谢您使用本程序进行统计分析，再见。", "\\n")
 `;
 
+window.R_auto_cox = `# Code by Lokyshin (Lokyshin.net@202306)
+# Reference
+# https://rpkgs.datanovia.com/survminer/
+# https://github.com/kassambara/survminer
+# https://cran.r-project.org/web/packages/survminer/index.html
+
+#安装必要的包
+suppressPackageStartupMessages({
+  if (!require(ggplot2)) install.packages("ggplot2")
+  if (!require(ggpubr)) install.packages("ggpubr")
+  if (!require(survival)) install.packages("survival")
+  if (!require(survminer)) install.packages("survminer")
+})
+
+#加载必要的包
+library("ggplot2")
+library("ggpubr")
+library("survival")
+library("survminer")
+
+options(warn = -1)
+
+cat("Cox回归分析R统计程序\\nby Lokyshin\\n\\n")
+
+#定义数据集，命名为df
+df = data.frame(
+    Patient_id = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20),
+    factor1 = c(1,1,0,1,0,0,1,0,1,0,1,0,1,0,0,1,0,1,1,0),
+    factor2 = c(1,1,0,1,0,0,1,0,1,0,1,0,1,0,0,1,0,1,1,0),
+    Time_to_event = c(2.6,9.3,8.2,16.8,7.2,17.4,14.6,18.9,9.2,16.4,2.8,4.8,13.4,12.3,19.7,14.4,8.7,13.6,0.2,7.8),
+    Event = c(1,1,0,0,1,0,1,0,1,0,1,0,1,0,1,1,1,0,0,0)
+)
+cat("研究数据集\\n")
+print(df)
+
+#数据整理
+df$surv = with(df,Surv(Time_to_event, Event)) #添加标记
+surv = df$surv
+
+cat("\\n全人群分析\\n")
+fit = survfit (surv ~ 1, df)
+print(fit)
+#print(summary(fit))
+
+#取得总体结果，取小数点后3位
+n = paste(fit$n, sep = " ")
+median_total = round(surv_median(fit)[2]$median,3)
+lcl95_total = round(surv_median(fit)[3]$lower,3)
+ucl95_total = round(surv_median(fit)[4]$upper,3)
+cl95_total = paste(lcl95_total, ucl95_total, sep = " - ")
+#计算样本结果，取小数点后3位
+median_sample = round(median(df$Time_to_event),3)
+#计算样本中Time_to_event的95%可信区间
+##计算可信区间，由于在线R没有此包，代码注释pr掉
+#lcl95_sample = round(CI(df$Time_to_event)[3],3)由于在线R没有此包，代码注释掉
+#ucl95_sample = round(CI(df$Time_to_event)[1],3)由于在线R没有此包，代码注释掉
+#构建结果
+#median_ci = data.frame( Sample_Size = n, Median_total = median_total, conf_interval = cl95_total, Median_sample = median_sample)
+#kable(median_ci, align = "l", column.width = c(10,10,10,10), col.names = c("研究的样本量","总体的中位数","总体可信区间","样本的中位数"))
+cat(
+    "\\n",
+    "统计结果","\\n",
+    "----------------------","\\n",
+    "样本数量        ", as.character(n), "\\n",
+    "----------------------","\\n",
+    "总体","\\n",
+    "中位数值        ", as.character(median_total), "\\n",
+    "95%可信区间","\\n",
+    "可信下限        ", as.character(lcl95_total), "\\n",
+    "可信上限        ", as.character(ucl95_total), "\\n",
+    "----------------------","\\n",
+    "样本","\\n",
+    "中位数值        ", as.character(median_sample), "\\n",
+    "----------------------","\\n"
+    )
+
+var_str = "df$factor1  df$factor2"
+
+# 引入必要的库
+library(survival)
+
+# 定义你的变量字符串
+var_str <- "factor1  factor2     factor3 factor4"
+
+# 将字符串分割为一个向量，并加上"df$"
+auto_uni_vars <- paste0("df$", strsplit(var_str, "\\s+")[[1]])
+
+# 计算元素个数
+auto_uni_n <- length(auto_uni_vars)
+
+# 定义结果存储向量和数据框
+formula_cox_uni <- vector("list", auto_uni_n)
+coxph_uni <- vector("list", auto_uni_n)
+coxph_uni_sum <- vector("list", auto_uni_n)
+coef_uni_table <- vector("list", auto_uni_n)
+significant_results_uni <- vector("list", auto_uni_n)
+report_uni <- vector("list", auto_uni_n)
+auto_multi_vars <- character()
+
+# 初始化循环计数器
+i = 1
+j = 1
+
+# 开始循环
+for (i in 1:auto_uni_n) {
+    formula_cox_uni[i] <- as.formula(paste("Surv(time, status) ~", auto_uni_vars[i]))
+    coxph_uni[i] <- coxph(formula_cox_uni[i], df)
+    coxph_uni_sum[i] <- summary(coxph_uni[i])
+    coef_uni_table[i] <- coxph_uni_sum[i]$coefficients
+    significant_results_uni[i] <- coef_uni_table[i][coef_uni_table[i][, "Pr(>|z|)"] < 0.05, ]
+    if (nrow(significant_results_uni[i]) > 0) {
+        report_uni[j] <- significant_results_uni[i]
+        auto_multi_vars[j] <- auto_uni_vars[i]
+        cat("Uni-variate analysis identified ", auto_uni_vars[i], " as a risk factor with p-value < 0.05.\n")
+        cat("HR: ", exp(coef_uni_table[i]["coef"]), ", p-value: ", coef_uni_table[i]["Pr(>|z|)"], "\n\n")
+        j = j + 1
+    }
+}
+
+# Check if any significant variables were found
+if (j == 1) {
+  cat("No risk factors were identified in the uni-variate analysis. Multi-variate analysis will not be performed.\n")
+} else {
+  # Check if only one variable was found
+  if (length(auto_multi_vars) == 1) {
+    cat("Only one risk factor, ", auto_multi_vars[1], ", was identified in the uni-variate analysis.\n")
+    cat("HR: ", exp(coef_uni_table[[1]]["coef"]), ", p-value: ", coef_uni_table[[1]]["Pr(>|z|)"], "\n\n")
+  } else {
+    # Create multi-variable formula
+    formula_cox_multi <- as.formula(paste("Surv(time, status) ~", paste(auto_multi_vars, collapse = " + ")))
+
+    # Run multi-variable survival analysis
+    coxph_multi <- coxph(formula_cox_multi , df)
+    coxph_multi_sum <- summary(coxph_multi)
+    coef_multi_table <- coxph_multi_sum$coefficients
+    significant_results_multi <- coef_multi_table[coef_multi_table[, "Pr(>|z|)"] < 0.05, ]
+
+    # Output variable names with p < 0.05
+    if (nrow(significant_results_multi) > 0) {
+      cat("Multi-variate analysis identified the following variables as independent risk factors with p-value < 0.05:\n")
+      for (var in rownames(significant_results_multi)) {
+        cat("Variable: ", var, ", HR: ", exp(coef_multi_table[var, "coef"]), ", p-value: ", coef_multi_table[var, "Pr(>|z|)"], "\n")
+      }
+    } else {
+      cat("No independent risk factors were identified in the multi-variate analysis.\n")
+    }
+  }
+}
+
+cat("\\n感谢您使用本程序进行统计分析，再见。", "\\n")
+`;
