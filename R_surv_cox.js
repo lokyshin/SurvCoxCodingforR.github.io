@@ -115,7 +115,7 @@ ucl_Strata_factor1 = table_fit_Strata_factor[, "0.95UCL"][1]
 chisq_Strata_factor = survd$chisq
 pval_Strata_factor = survp$pval
 if (is.na(Strata_factor_kmp) || is.na(median_Strata_factor0) || is.na(median_Strata_factor1)) {
-  km_curves_differ = "无法进行统计推断，可能是事件结局数量太少。"
+  km_curves_differ = "请谨慎看待组间p值，因为事件结局数量太少。"
 } else {
   if (Strata_factor_kmp < 0.05) {
     km_curves_differ = "经统计学推断，分层后两组中位时间【有】统计学差异！"
