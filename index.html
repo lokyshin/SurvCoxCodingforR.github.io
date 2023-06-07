@@ -106,8 +106,10 @@
       </div>
           <div id="functionArea" class="area">
           <h3>General Function</h>
-          <button onClick="genRdf()">Generate DataFrame</button>      
-          <button id="genRcodes" onClick="genRcodes()">Kaplan-Meier survival analysis</button>
+          <p>
+          <button onClick="genRdf()">Generate DataFrame</button> or      
+          <button id="genRcodes_strata_or_group" onClick="genRcodes_strata_or_group()">Kaplan-Meier survival analysis for all patients and by :</button>
+          <select id="colSelect_strata_or_group" name="colSelect_strata_or_group"></select>.
           <hr>
           <h3>Univariate and Multivariate Cox regression Analysis</h3>
           1. Select a variable: 
@@ -119,6 +121,7 @@
           <button id="genRcodesCoxMul" onClick="genRcodesCoxMul()">Cox Multivariate Analysis</button>
           <hr>
           <h3>Statistical analysis of quantitative data</h3>
+          <h4>The mean or median are being investigated to determine if they are equal.</h4>
           Please perform statistical analysis on  
           <select id="colSelect_R_des_continuous" name="colSelect_R_des_continuous"></select>
           , grouped by
@@ -126,17 +129,27 @@
           <button id="genRcodesR_des_continuous_by_btn" onClick="genRcodesR_des_continuous_by()">Run!</button>
           <br>
           Kindly note that the 'analysis on' variable needs to be continuous in nature and the 'grouped by' variable must be categorical.
-          <Hr>
+          <hr>
           <h3>Statistical analysis of categorical data</h3>
+          <h4>The distribution is being assessed to determine if it is the same.</h4>
           Perform a statistical analysis of  
           <select id="colSelect_R_des_count_R" name="colSelect_R_des_count_R"></select>
           , categorized by 
           <select id="colSelect_R_des_count_C" name="colSelect_R_des_count_C"></select> .
           <button id="genRcodesR_des_count" onClick="genRcodesR_des_count()">Run!</button>
           <br>
-          Note that both of these variables must be categorical variables (not ordinal variables).
+          Note that both of these variables must be categorical variables (not ranked variables).
           <hr>
+          <h3>Statistical analysis of ranked data (grades > 1)</h3>
+          <h4>The equality of median values is being assessed.</h4>
+          Perform a statistical analysis of (ranked) 
+          <select id="colSelect_R_des_ranked_R" name="colSelect_R_des_ranked_R"></select>
+          , categorized by 
+          <select id="colSelect_R_des_ranked_C" name="colSelect_R_des_ranked_C"></select> .
+          <button id="genRcodesR_des_ranked" onClick="genRcodesR_des_ranked()">Run!</button>
           <br>
+          Note that the data being analyzed needs to be ordinal variables (not categorical variables).
+          <hr>
         </div>
     </div>
     <div id="rightSide">
@@ -320,11 +333,14 @@
     }
 
 function updateDropdown() {
+    let dropdown_strata_or_group = document.getElementById('colSelect_strata_or_group');  
     let dropdown_coxuni = document.getElementById('colSelect_coxuni');
     let dropdown_colSelect_R_des_continuous = document.getElementById('colSelect_R_des_continuous');
     let dropdown_colSelect_R_des_continuous_by = document.getElementById('colSelect_R_des_continuous_by');
     let dropdown_colSelect_R_des_count_R = document.getElementById('colSelect_R_des_count_R');
     let dropdown_colSelect_R_des_count_C = document.getElementById('colSelect_R_des_count_C');
+    let dropdown_colSelect_R_des_ranked_R = document.getElementById('colSelect_R_des_ranked_R');
+    let dropdown_colSelect_R_des_ranked_C = document.getElementById('colSelect_R_des_ranked_C');
     let multiSelect_coxmulti = document.getElementById('multiSelect_coxmulti');
     let colHeaders = hot.getColHeader();
     dropdown_coxuni.innerHTML = '';
@@ -337,6 +353,9 @@ function updateDropdown() {
         let opt3 = document.createElement('option');
         let opt4 = document.createElement('option');
         let opt5 = document.createElement('option');
+        let opt6 = document.createElement('option');
+        let opt7 = document.createElement('option');
+        let opt8 = document.createElement('option');
         let multiOpt = document.createElement('option');
         opt1.value = colHeaders[i];
         opt1.innerHTML = colHeaders[i];
@@ -348,14 +367,55 @@ function updateDropdown() {
         opt4.innerHTML = colHeaders[i];
         opt5.value = colHeaders[i];
         opt5.innerHTML = colHeaders[i];
+        opt6.value = colHeaders[i];
+        opt6.innerHTML = colHeaders[i];
+        opt7.value = colHeaders[i];
+        opt7.innerHTML = colHeaders[i];
+        opt8.value = colHeaders[i];
+        opt8.innerHTML = colHeaders[i];
         multiOpt.value = colHeaders[i];
         multiOpt.innerHTML = colHeaders[i];
-        dropdown_coxuni.appendChild(opt1);
-        dropdown_colSelect_R_des_continuous.appendChild(opt2);
-        dropdown_colSelect_R_des_continuous_by.appendChild(opt3);
-        dropdown_colSelect_R_des_count_R.appendChild(opt4);
-        dropdown_colSelect_R_des_count_C.appendChild(opt5);
+        dropdown_strata_or_group.appendChild(opt1);        
+        dropdown_coxuni.appendChild(opt2);
+        dropdown_colSelect_R_des_continuous.appendChild(opt3);
+        dropdown_colSelect_R_des_continuous_by.appendChild(opt4);
+        dropdown_colSelect_R_des_count_R.appendChild(opt5);
+        dropdown_colSelect_R_des_count_C.appendChild(opt6);
+        dropdown_colSelect_R_des_ranked_R.appendChild(opt7);
+        dropdown_colSelect_R_des_ranked_C.appendChild(opt8);
         multiSelect_coxmulti.appendChild(multiOpt);
+        //设定默认选项 - 生存分析默认 Group_or_Factor_2class
+        if(colHeaders[i] == "Group_or_Factor_2class") {
+            opt1.selected = true;
+        }
+        //设定默认选项 - 单因素Cox回归分析默认 Group_or_Factor_2class
+        if(colHeaders[i] == "Group_or_Factor_2class") {
+            opt2.selected = true;
+        }
+        //设定默认选项 - 计量资料分析变量默认 Time_to_event
+        if(colHeaders[i] == "Time_to_event") {
+            opt3.selected = true;
+        }
+        //设定默认选项 - 计量资料分组默认 Group_or_Factor_2class
+        if(colHeaders[i] == "Group_or_Factor_2class") {
+            opt4.selected = true;
+        }
+        //设定默认选项 - 计数资料分析变量默认 Event
+        if(colHeaders[i] == "Event") {
+            opt5.selected = true;
+        }
+        //设定默认选项 - 计数资料组默认 Group_or_Factor_2class
+        if(colHeaders[i] == "Group_or_Factor_2class") {
+            opt6.selected = true;
+        }
+        //设定默认选项 - 等级资料分析变量默认 Event
+        if(colHeaders[i] == "Event") {
+            opt7.selected = true;
+        }
+        //设定默认选项 - 等级资料组默认 Group_or_Factor_2class
+        if(colHeaders[i] == "Group_or_Factor_2class") {
+            opt8.selected = true;
+        }
     }
 }
 
@@ -433,31 +493,40 @@ function updateDropdown() {
       alert("Well done!\nThe R codes has been copied to Clipboard");
     }
 
-    function genRcodes() {
-      if(!checkTableCols() || !checkTableData()) {
-        return;
-      }
-      let dfCode = genDataFrameCode();
-      if(dfCode === null) {
-        return;
-      }
-      var rCodes = window.R_surv_cox;
-      rCodes = rCodes.replace(/df = .*?\)\n\)/s, dfCode);
-      let colHeaders = hot.getColHeader();
-      rCodes = rCodes.replace(/Strata_factor/g, colHeaders[3]);
-      document.getElementById("Rcodes_textarea").value = rCodes;        
-      copyToClipboard();
-      alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
-      window.open('https://rdrr.io/snippets/embed/', '_blank')
-    }
-
-    function genRcodesCoxUni() {
-        let selectedCol = document.getElementById('colSelect_coxuni').value;
-        if(!selectedCol) {
+    function genRcodes_strata_or_group() {
+        let selectedCol_strata_or_group = document.getElementById('colSelect_strata_or_group').value;
+        if(!selectedCol_strata_or_group) {
             alert('Please select a variable.');
             return;
         }
-        if((selectedCol === "Patient_id") || (selectedCol === "Time_to_event") || (selectedCol === "Event") ) {
+        if((selectedCol_strata_or_group === "Patient_id") || (selectedCol_strata_or_group === "Time_to_event") || (selectedCol_strata_or_group === "Event") ) {
+            alert('Please avoid selecting \'Patient_id\', \'Time_to_event\', or \'Event\'.');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_strata_or_group = window.R_strata_or_group;
+        rCodes_strata_or_group = rCodes_strata_or_group.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_strata_or_group = rCodes_strata_or_group.replace(/Strata_factor/g, selectedCol_strata_or_group); 
+        document.getElementById('Rcodes_textarea').value = rCodes_strata_or_group;
+        copyToClipboard();   
+        alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesCoxUni() {
+        let selectedCol_coxuni = document.getElementById('colSelect_coxuni').value;
+        if(!selectedCol_coxuni) {
+            alert('Please select a variable.');
+            return;
+        }
+        if((selectedCol_coxuni === "Patient_id") || (selectedCol_coxuni === "Time_to_event") || (selectedCol_coxuni === "Event") ) {
             alert('Please avoid selecting \'Patient_id\', \'Time_to_event\', or \'Event\'.');
             return;
         }
@@ -471,7 +540,7 @@ function updateDropdown() {
 
         var rCodes_coxuni = window.R_cox;
         rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
-        rCodes_coxuni = rCodes_coxuni.replace(/Strata_factor/g, selectedCol); 
+        rCodes_coxuni = rCodes_coxuni.replace(/Strata_factor/g, selectedCol_coxuni); 
         rCodes_coxuni = rCodes_coxuni.replace(/Cox回归分析/g, "单因素Cox回归分析"); 
         document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
         copyToClipboard();   
@@ -564,6 +633,35 @@ function updateDropdown() {
         rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
         rCodes_coxuni = rCodes_coxuni.replace(/RD_characteristic/g, selectedCol_R_des_count_R); 
         rCodes_coxuni = rCodes_coxuni.replace(/RD_classfication/g, selectedCol_R_des_count_C); 
+        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        copyToClipboard();   
+        alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesR_des_ranked() {
+        let selectedCol_R_des_ranked_R = document.getElementById('colSelect_R_des_ranked_R').value;
+        if(!selectedCol_R_des_ranked_R) {
+            alert('Please select a variable.\n\nNote that both of these variables must be RANKED variables (not categorical variables).\nin the area of Statistical analysis of ranked data');
+            return;
+        }
+        let selectedCol_R_des_ranked_C = document.getElementById('colSelect_R_des_ranked_C').value;
+        if(!selectedCol_R_des_ranked_C) {
+            alert('Please select a variable.\n\nNote that both of these variables should be categorical variables (not ordinal variables).\nin the area of Statistical analysis of ranked data');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_coxuni = window.R_des_ranked;
+        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_coxuni = rCodes_coxuni.replace(/RD_grade_value/g, selectedCol_R_des_ranked_R); 
+        rCodes_coxuni = rCodes_coxuni.replace(/RD_grade_group/g, selectedCol_R_des_ranked_C); 
         document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
         copyToClipboard();   
         alert("Well done!\nThe R codes has been copied. Please paste it into the top text box in the new pop-up window and click 'RUN' to view the results.");
