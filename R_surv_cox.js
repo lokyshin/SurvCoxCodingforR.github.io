@@ -697,3 +697,127 @@ if(kruskal_p < 0.05){
 
 cat("\\n感谢您使用本程序进行统计分析，再见。", "\\n")
 `;
+
+window.R_wfplot= `
+# Code by Lokyshin (Lokyshin.net@202306)
+# Reference
+# https://rpkgs.datanovia.com/survminer/
+# https://github.com/kassambara/survminer
+# https://cran.r-project.org/web/packages/survminer/index.html
+
+
+# 安装所需的包
+suppressPackageStartupMessages({
+  if(!require(ggplot2)) install.packages("ggplot2")
+})
+
+# 加载所需的包
+library(ggplot2)
+
+options(warn = -1)
+
+cat("绘制肿瘤瀑布图的R程序\\nby Lokyshin\\n")
+
+# 定义数据集，命名为df
+df = data.frame(
+    Patient_id = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21),
+    Time_to_event = c(2.6,9.3,8.2,12.8,7.2,17.4,11.6,17.9,9.2,10.4,2.8,4.8,16.1,12.3,11.7,9.8,12.3,13.4,16.7,18.9,22),
+    Event = c(1,1,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1),
+    Groups = c(1,0,0,1,0,0,1,0,1,0,1,0,1,0,0,1,0,1,0,1,0),
+    Factor = c(0,1,1,0,1,0,1,0,1,0,1,0,1,0,0,1,0,1,0,1,1),
+    Response_Rate = c(26,22,20,19,15,6,0,0,-8,-15,-20,-24,-28,-30,-37,-42,-28,-30,-37,-42,-50),
+    Response_evaluation = c('NE','PD','SD','SD','SD','PD','SD','SD','SD','SD','SD','SD','SD','PR','PR','PR','PR','PR','PD','PR','PR')
+)
+
+# 按照Response从大到小排序
+df = df[order(-df$Response_Rate),]
+
+# 定义颜色映射
+color_mapping = c('CR' = "#CCEAFC", #淡蓝，#淡粉#FCD9FC
+                   'PR' = "#D2E8E3", #淡绿，或者#DDFCCC
+                   'SD' = "#FFE8B5", #淡黄，或者#F2E3D5 或者#FCE8CC
+                   'PD' = "#F4E2DE", #淡红
+                   'NE' = "#5D6A73", #淡褐，#深褐#594438 
+                   'NA' = "#C2C3BE") #淡灰
+                  
+
+# 计算y轴最大值
+y_max = ifelse(max(df$Response_Rate) < 30, 40, 
+                ifelse(max(df$Response_Rate) + 20 < 100, max(df$Response_Rate) + 20, 
+                       max(df$Response_Rate)))
+
+# 计算y轴最小值
+if (min(df$Response_Rate) > -30) {
+  y_min = -40
+} else if (-40 <= min(df$Response_Rate) && min(df$Response_Rate) < -30) {
+  y_min = -50
+} else if (-50 <= min(df$Response_Rate) && min(df$Response_Rate) < -40) {
+  y_min = -60
+} else if (-60 <= min(df$Response_Rate) && min(df$Response_Rate) < -50) {
+  y_min = -80
+} else if (min(df$Response_Rate) < -60) {
+  y_min = -100
+}
+
+# 使用颜色映射对Response_evaluation进行映射
+colors = color_mapping[df$Response_evaluation]
+
+# 创建透明度向量，group为1的设为0.6，其余设为1
+alpha = ifelse(df$Groups == 1, 0.6, 1)
+
+# 预设分组图标
+group_shapes = c(1, 2, 0, 6, 5)
+# 0 空心方框
+# 1 空心圆圈
+# 2 空心三角
+# 3 十字符号
+# 4 交叉符号
+# 5 旋转45度的空心正方形
+# 6 空心倒三角
+
+# 增加图形下方空间放置x轴标题
+#par(mar=c(5, 0, 0, 0))
+
+# 绘制条形图
+bp = barplot(df$Response_Rate, names.arg=df$Patient_id, col=colors, ylim=c(y_min, y_max),
+             xaxt="n", main="Waterfall plot of best overall response", ylab="Response Rate (%)",
+             cex.main=1.3, cex.sub=1.3, cex.lab=1, cex.names=0.8, cex.axis=0.8, border='#D9CDBF')
+
+
+# 添加x轴
+axis(1, at=bp, labels=1:length(df$Response_Rate))
+
+# 添加水平线和注释
+abline(h=20, lty=2, col = rgb(0, 0, 0, alpha = 0.2))#设置透明度80%
+abline(h=-30, lty=2, col = rgb(0, 0, 0, alpha = 0.2))#设置透明度80%
+
+# 绘制图例
+# 只包含在Response_evaluation中出现的值
+legend_labels = names(color_mapping)[names(color_mapping) %in% unique(df$Response_evaluation)]
+legend("bottomleft", inset=c(0.1,0.1), legend=legend_labels, 
+       fill=color_mapping[legend_labels], 
+       title="Response", bty="n", cex=0.8, border='#D9CDBF')
+
+# 绘制组别和组别图例开关
+# 替换失败仍然分组有效
+addgroup <- 1
+# 替换成功则分组取消
+addgroup = 1
+
+if (addgroup == 1) {
+  # 在条形图上添加分组图形
+  points(bp, ifelse(df$Response_Rate > 0, df$Response_Rate + 3, 3), pch = group_shapes[df$Groups+1], cex = 1.2)
+
+  # 添加关于组别的图例
+  legend("bottomleft", inset=c(0.25,0.1), legend=paste("Groups", 0:(length(unique(df$Groups))-1)), 
+         pch = group_shapes[1:length(unique(df$Groups))], 
+         title="Groups", bty="n", cex=0.8,border='#D9CDBF')
+}
+
+title(xlab="Patients id")
+
+# 出图
+bp
+
+cat("\\n感谢您使用本程序进行统计分析，再见。", "\\n")
+`;
