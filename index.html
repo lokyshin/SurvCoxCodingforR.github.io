@@ -25,7 +25,8 @@
       margin: 0 auto;
       position: relative;
     }
-    body, .container {
+    body, 
+    .container {
       background-color: transparent; /* this will make the body and container backgrounds transparent */
     } 
     h1 {
@@ -52,7 +53,7 @@
     .area {
       margin-bottom: 20px;
     }
-    #leftSide {
+    .leftSide {
       display: flex;
       flex-direction: column;
     }
@@ -122,6 +123,34 @@
           <select id="multiSelect_coxmulti" multiple></select> 放入 
           <button id="genRcodesCoxMul" onClick="genRcodesCoxMul()">多因素Cox回归模型</button>
           <hr>
+          <h3>绘制瀑布图</h3>
+          按照每个患者的肿瘤缓解评估结果*(和
+          <select id="colSelect_wfp_rr" name="colSelect_wfp_rr"></select>  
+          <button id="genRcodeswfplot" onClick="genRcodesR_wfplot()">绘制瀑布图</button>
+          <br>
+          <i>高级选项</i>
+          <br>
+          开启分组: 
+          <input type="checkbox" id="Checkbox_wfp_group_filter" checked> 
+          <label for="Checkbox_wfp_group" >分组: </label>
+          <select id="colSelect_wfp_group" name="colSelect_wfp_group"></select> 
+          <br>
+          🎨画图调色板：
+          <br>
+          选择CR颜色: <input type="color" id="wfp_cr" value="#CCEAFC">
+          <br>
+          选择PR颜色: <input type="color" id="wfp_pr" value="#D2E8E3">
+          <br>
+          选择SD颜色: <input type="color" id="wfp_sd" value="#FFE8B5">
+          <br>
+          选择PD颜色: <input type="color" id="wfp_pd" value="#F4E2DE">
+          <br>
+          选择NE颜色: <input type="color" id="wfp_ne" value="#5D6A73">(Not Evaluation, 如有)
+          <br>
+          选择NA颜色: <input type="color" id="wfp_na" value="#C2C3BE">(Not Aavalible, 如有)
+          <br>
+          *结果须为“CR”、“PR”、“SD”、“PD”、“NE”或“NA”的一种。缓解绿的系统保留变量名称必须是“Response_evaluation”，只需要录入正负百分比（省略%）。
+          <hr>
           <h3>连续变量的统计描述与分组对比</h3>
           <h4>比较均数/中位数是否相同</h4>
           请选择一个待分析分析变量：
@@ -186,31 +215,36 @@
     </p>
      <img src="img.png" id="bottomRightImage" />
   </div>
-    <script>
+     <script>
 
     var data = [
-      ["1", "2.6", "1", "1", "0"],
-      ["2", "9.3", "1", "1", "1"],
-      ["3", "8.2", "0", "0", "1"],
-      ["4", "12.8", "0", "1", "0"],
-      ["5", "7.2", "1", "0", "1"],
-      ["6", "17.4", "0", "0", "0"],
-      ["7", "11.6", "1", "1", "1"],
-      ["8", "17.9", "0", "0", "0"],
-      ["9", "9.2", "1", "1", "1"],
-      ["10", "10.4", "0", "0", "0"],
-      ["11", "2.8", "1", "1", "1"],
-      ["12", "4.8", "0", "0", "0"],
-      ["13", "16.1", "1", "1", "1"],
-      ["14", "12.3", "0", "0", "0"],
-      ["15", "11.7", "1", "0", "1"],
-      ["16", "9.8", "0", "0", "1"]
+      ["1", "2.6", "1", "1", "0", "-20", "SD"],
+      ["2", "9.3", "1", "1", "1", "22", "PD"],
+      ["3", "8.2", "0", "0", "1", "6", "PD"],
+      ["4", "12.8", "0", "1", "0", "0", "SD"],
+      ["5", "7.2", "1", "0", "1", "15", "SD"],
+      ["6", "11.6", "1", "1", "1", "20", "SD"],
+      ["7", "17.9", "0", "0", "0", "19", "SD"],
+      ["8", "9.2", "1", "1", "1", "26", "NE"],
+      ["9", "2.8", "1", "1", "1", "-37", "PR"],
+      ["10", "10.4", "0", "0", "0", "-30", "PR"], 
+      ["11", "17.4", "0", "0", "0", "0", "SD"],     
+      ["12", "4.8", "0", "0", "0", "-42", "PR"],
+      ["13", "16.1", "1", "1", "1", "-28", "PR"],
+      ["14", "12.3", "0", "0", "0", "-30", "PR"],
+      ["15", "11.7", "1", "0", "1", "-37", "PD"],
+      ["16", "9.8", "0", "0", "1", "-42", "PR"],
+      ["17", "9.8", "0", "0", "1", "-100", "CR"],
+      ["18", "9.8", "0", "0", "1", "-8", "SD"],
+      ["19", "9.8", "0", "0", "1", "-15", "SD"],
+      ["20", "9.8", "0", "0", "1", "-24", "SD"],
+      ["21", "9.8", "0", "0", "1", "28", "SD"]      
     ];
 
     var container = document.getElementById('hot');
     var hot = new Handsontable(container, {
       data: data,
-      colHeaders: ["Patient_id", "Time_to_event", "Event", "Groups", "Factor"],
+      colHeaders: ["Patient_id", "Time_to_event", "Event", "Groups", "Factor", "Response_Rate", "Response_evaluation"],
       contextMenu: {
         items: {
           "copy": {name:'复制 | Ctrl + C'},
@@ -324,27 +358,31 @@
       },
     });
 
-    function genDataFrameCode() {
-      if(!checkTableRows() || !checkTableCols()) {
-        return null;
-      }
-
-      let colHeaders = hot.getColHeader();
-      let output = 'df = data.frame(\n';
-      for(let colIndex=0; colIndex<colHeaders.length; colIndex++) {
-        let colData = '    '+colHeaders[colIndex]+' = c(';
-        for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
-          let cellData = hot.getDataAtCell(rowIndex, colIndex);
-          if(cellData !== null && cellData !== '') {
-            colData += cellData + ',';
-          }
-        }
-        colData = colData.slice(0, -1) + ')';
-        output += colData + ',\n';
-      }
-      output = output.slice(0, -2) + '\n)';
-      return output;
+  function genDataFrameCode() {
+    if(!checkTableRows() || !checkTableCols()) {
+      return null;
     }
+
+    let colHeaders = hot.getColHeader();
+    let output = 'df = data.frame(\n';
+    for(let colIndex=0; colIndex<colHeaders.length; colIndex++) {
+      let colData = '    '+colHeaders[colIndex]+' = c(';
+      for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
+        let cellData = hot.getDataAtCell(rowIndex, colIndex);
+        if(cellData !== null && cellData !== '') {
+          // Check if cellData is not a number, if not, add single quotes around it
+          if(isNaN(Number(cellData.trim()))) {
+            cellData = `'${cellData}'`;
+          }
+          colData += cellData + ',';
+        }
+      }
+      colData = colData.slice(0, -1) + ')';
+      output += colData + ',\n';
+    }
+    output = output.slice(0, -2) + '\n)';
+    return output;
+  }
 
 function updateDropdown() {
     let dropdown_strata_or_group = document.getElementById('colSelect_strata_or_group');  
@@ -355,6 +393,8 @@ function updateDropdown() {
     let dropdown_colSelect_R_des_count_C = document.getElementById('colSelect_R_des_count_C');
     let dropdown_colSelect_R_des_ranked_R = document.getElementById('colSelect_R_des_ranked_R');
     let dropdown_colSelect_R_des_ranked_C = document.getElementById('colSelect_R_des_ranked_C');
+    let dropdown_colSelect_R_wfp_rr = document.getElementById('colSelect_wfp_rr');
+    let dropdown_colSelect_R_wfp_group = document.getElementById('colSelect_wfp_group');    
     let multiSelect_coxmulti = document.getElementById('multiSelect_coxmulti');
     let colHeaders = hot.getColHeader();
     dropdown_strata_or_group.innerHTML = '';
@@ -365,6 +405,8 @@ function updateDropdown() {
     dropdown_colSelect_R_des_count_C.innerHTML = '';
     dropdown_colSelect_R_des_ranked_R.innerHTML = '';
     dropdown_colSelect_R_des_ranked_C.innerHTML = '';
+    dropdown_colSelect_R_wfp_rr.innerHTML = '';
+    dropdown_colSelect_R_wfp_group.innerHTML = '';
     multiSelect_coxmulti.innerHTML = '';
     for(let i = 0; i < colHeaders.length; i++) {
         let opt1 = document.createElement('option');
@@ -375,6 +417,8 @@ function updateDropdown() {
         let opt6 = document.createElement('option');
         let opt7 = document.createElement('option');
         let opt8 = document.createElement('option');
+        let opt9 = document.createElement('option');
+        let opt10 = document.createElement('option');
         let multiOpt = document.createElement('option');
         opt1.value = colHeaders[i];
         opt1.innerHTML = colHeaders[i];
@@ -392,6 +436,10 @@ function updateDropdown() {
         opt7.innerHTML = colHeaders[i];
         opt8.value = colHeaders[i];
         opt8.innerHTML = colHeaders[i];
+        opt9.value = colHeaders[i];
+        opt9.innerHTML = colHeaders[i];
+        opt10.value = colHeaders[i];
+        opt10.innerHTML = colHeaders[i];  
         multiOpt.value = colHeaders[i];
         multiOpt.innerHTML = colHeaders[i];
         dropdown_strata_or_group.appendChild(opt1);        
@@ -402,6 +450,8 @@ function updateDropdown() {
         dropdown_colSelect_R_des_count_C.appendChild(opt6);
         dropdown_colSelect_R_des_ranked_R.appendChild(opt7);
         dropdown_colSelect_R_des_ranked_C.appendChild(opt8);
+        dropdown_colSelect_R_wfp_rr.appendChild(opt9);
+        dropdown_colSelect_R_wfp_group.appendChild(opt10);
         multiSelect_coxmulti.appendChild(multiOpt);
         //设定默认选项 - 生存分析默认 Groups or Factor
         if(colHeaders[i] == "Groups") {
@@ -434,6 +484,14 @@ function updateDropdown() {
         //设定默认选项 - 等级资料组默认 Groups or Factor
         if(colHeaders[i] == "Groups") {
             opt8.selected = true;
+        }
+        //设定默认选项 - 瀑布图默认个体缓解率
+        if(colHeaders[i] == "Response_Rate") {
+            opt9.selected = true;
+        }
+        //设定默认选项 - 瀑布图默认分组
+        if(colHeaders[i] == "Groups") {
+            opt10.selected = true;
         }
     }
 }
@@ -486,17 +544,28 @@ function updateDropdown() {
     function checkTableData() {
       let rowLength = hot.countRows();
       let colLength = hot.countCols();
+      let colHeaders = hot.getColHeader();
 
       for(let rowIndex=0; rowIndex<rowLength; rowIndex++) {
         for(let colIndex=0; colIndex<colLength; colIndex++) {
           let cellData = hot.getDataAtCell(rowIndex, colIndex);
-          if(cellData === null || cellData === '' || isNaN(cellData)) {
+
+          if(colHeaders[colIndex] === 'Response_evaluation') {
+            if(!['CR', 'PR', 'SD', 'PD', 'NE', 'NA'].includes(cellData.trim())) {
+              alert('在 "Response_evaluation" 列中，单元格只能填入“CR”，“PR”，“SD”，“PD”，“NE”，“NA”。在第' + (colIndex + 1) + ' 列，第' + (rowIndex + 1) + ' 行存在错误输入。');
+              return false;
+            }
+          } else if(cellData === null || cellData === '' || isNaN(Number(cellData.trim()))) {
             alert('表格数字需要填写完整。请检查第 ' + (rowIndex + 1) + ' 行第 ' + (colIndex + 1) + ' 列的单元格是否空白或填写了非数字的字符。');
             return false;
           }
         }
       }
       return true;
+    }
+
+    function getColor(id) {
+      var color = document.getElementById(id).value;  // 输出选择的颜色值（16 进制颜色代码） 
     }
 
     function genRdf() {
@@ -619,11 +688,11 @@ function updateDropdown() {
             return;
         }
 
-        var rCodes_coxuni = window.R_des_continuous;
-        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
-        rCodes_coxuni = rCodes_coxuni.replace(/RDCvariate/g, selectedCol_R_des_continuous); 
-        rCodes_coxuni = rCodes_coxuni.replace(/RDCgroup/g, selectedCol_R_des_continuous_by); 
-        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        var rCodes_des_continuous = window.R_des_continuous;
+        rCodes_des_continuous = rCodes_des_continuous.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_des_continuous = rCodes_des_continuous.replace(/RDCvariate/g, selectedCol_R_des_continuous); 
+        rCodes_des_continuous = rCodes_des_continuous.replace(/RDCgroup/g, selectedCol_R_des_continuous_by); 
+        document.getElementById('Rcodes_textarea').value = rCodes_des_continuous;
         copyToClipboard();   
         alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
         window.open('https://rdrr.io/snippets/embed/', '_blank')         
@@ -648,11 +717,11 @@ function updateDropdown() {
             return;
         }
 
-        var rCodes_coxuni = window.R_des_count;
-        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
-        rCodes_coxuni = rCodes_coxuni.replace(/RD_characteristic/g, selectedCol_R_des_count_R); 
-        rCodes_coxuni = rCodes_coxuni.replace(/RD_classfication/g, selectedCol_R_des_count_C); 
-        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        var rCodes_des_count = window.R_des_count;
+        rCodes_des_count = rCodes_des_count.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_des_count = rCodes_des_count.replace(/RD_characteristic/g, selectedCol_R_des_count_R); 
+        rCodes_des_count = rCodes_des_count.replace(/RD_classfication/g, selectedCol_R_des_count_C); 
+        document.getElementById('Rcodes_textarea').value = rCodes_des_count;
         copyToClipboard();   
         alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
         window.open('https://rdrr.io/snippets/embed/', '_blank')         
@@ -677,11 +746,56 @@ function updateDropdown() {
             return;
         }
 
-        var rCodes_coxuni = window.R_des_ranked;
-        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
-        rCodes_coxuni = rCodes_coxuni.replace(/RD_grade_value/g, selectedCol_R_des_ranked_R); 
-        rCodes_coxuni = rCodes_coxuni.replace(/RD_grade_group/g, selectedCol_R_des_ranked_C); 
-        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        var rCodes_des_ranked = window.R_des_ranked;
+        rCodes_des_ranked = rCodes_des_ranked.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_des_ranked = rCodes_des_ranked.replace(/RD_grade_value/g, selectedCol_R_des_ranked_R); 
+        rCodes_des_ranked = rCodes_des_ranked.replace(/RD_grade_group/g, selectedCol_R_des_ranked_C); 
+        document.getElementById('Rcodes_textarea').value = rCodes_des_ranked;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesR_wfplot() {
+        let selectedCol_wfp_rr = document.getElementById('colSelect_wfp_rr').value;
+        if(!selectedCol_wfp_rr) {
+            alert('请选择缓解率（%）变量。');
+            return;
+        }
+        let selectedCol_wfp_group = document.getElementById('colSelect_wfp_group').value;
+        if(!selectedCol_wfp_group) {
+            alert('请选择用于分组的分类变量');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        //获取调色板颜色
+        var col_wfp_cr = document.getElementById("wfp_cr").value;
+        var col_wfp_pr = document.getElementById("wfp_pr").value;
+        var col_wfp_sd = document.getElementById("wfp_sd").value;
+        var col_wfp_pd = document.getElementById("wfp_pd").value;        
+        var col_wfp_ne = document.getElementById("wfp_ne").value;
+        var col_wfp_na = document.getElementById("wfp_na").value;
+
+        var rCodes_wfp = window.R_wfplot;
+        rCodes_wfp = rCodes_wfp.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_wfp = rCodes_wfp.replace(/Response_Rate/g, selectedCol_wfp_rr); //替换缓解率变量
+        rCodes_wfp = rCodes_wfp.replace(/addgroup = 1/g, wfp_group_filter);// 替换分组开关
+        rCodes_wfp = rCodes_wfp.replace(/Groups/g, selectedCol_wfp_group); //替换分组变量
+        rCodes_wfp = rCodes_wfp.replace(/#CCEAFC/g, col_wfp_cr); //替换CR颜色
+        rCodes_wfp = rCodes_wfp.replace(/#D2E8E3/g, col_wfp_pr); //替换PR颜色        
+        rCodes_wfp = rCodes_wfp.replace(/#FFE8B5/g, col_wfp_sd); //替换SD颜色   
+        rCodes_wfp = rCodes_wfp.replace(/#F4E2DE/g, col_wfp_pd); //替换PD颜色 
+        rCodes_wfp = rCodes_wfp.replace(/#5D6A73/g, col_wfp_ne); //替换NE颜色 
+        rCodes_wfp = rCodes_wfp.replace(/#C2C3BE/g, col_wfp_na); //替换NA颜色                              
+
+        document.getElementById('Rcodes_textarea').value = rCodes_wfp;
         copyToClipboard();   
         alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
         window.open('https://rdrr.io/snippets/embed/', '_blank')         
@@ -691,3 +805,15 @@ function updateDropdown() {
   </script>
 </body>
 </html>
+<script>
+  window.wfp_group_filter = " ";
+
+  document.getElementById("Checkbox_wfp_group_filter").addEventListener('change', function() {
+    if(this.checked) {
+      window.wfp_group_filter = "addgroup = 1";
+    } else {
+      window.wfp_group_filter = "addgroup = 0";
+    }
+  });
+</script>
+
