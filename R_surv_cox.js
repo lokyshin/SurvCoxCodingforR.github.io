@@ -462,8 +462,8 @@ kruskal_result = kruskal.test(RDCvariate ~ RDCgroup, data = df)
 kruskal_p = kruskal_result$p.value
 
 #Welch's t检验
-t_test_result = t.test(RDCvariate ~ RDCgroup, data = df, var.equal = FALSE)
-t_test_result_p = t_test_result$p.value  
+wt_test_result = t.test(RDCvariate ~ RDCgroup, data = df, var.equal = FALSE)
+wt_test_result_p = t_test_result$p.value  
 
 #F检验（单因素方差分析）
 aov_result = aov(RDCvariate ~ as.factor(RDCgroup), data = df)
@@ -503,8 +503,8 @@ if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (u
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("Welch's t检验结果", "\\n")
-  print(t_test_result)
-  if(t_test_result_p<0.05){
+  print(wt_test_result)
+  if(wt_test_result_p<0.05){
     cat("
     组间基线情况：\\n符合正态分布，但方差不齐。\\n当前基线不平齐。基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。")}else{cat("基线情况：\\n符合正态分布，但方差不齐。\\n当前基线平齐。基线描述基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。
     ")
@@ -516,7 +516,7 @@ if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (un
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("F检验（单因素方差分析）结果", "\\n")
-  print(t_test_result)
+  print(aovm)
   if(aovm_p<0.05){cat("
     组间基线情况：\\n符合正态分布，方差齐。\\n当前基线不平齐。基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。")}else{cat("基线情况：\\n符合正态分布，方差齐。\\n当前基线平齐。基线描述基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。
     ")
