@@ -400,12 +400,30 @@
         this.updateSettings({colHeaders: colHeaders});
         updateDropdown(); 
       },
+
       afterRemoveCol: function(index, amount) {
-        var colHeaders = this.getColHeader();
-        colHeaders.splice(index, amount);
-        this.updateSettings({colHeaders: colHeaders});
-        updateDropdown(); 
+        var colHeaders = this.getColHeader().slice(0);
+        var originalData = this.getSourceDataArray().slice(0);
+
+        // 为删除的列创建备份
+        var deletedColumnsData = originalData.map(function(row) {
+          return row.slice(index, index + amount);
+        });
+        var deletedColumnsHeaders = colHeaders.slice(index, index + amount);
+
+        // 更新列头，但不调用loadData()，因为这会清空撤销堆栈
+        this.updateSettings({
+          colHeaders: colHeaders,
+        });
+
+        // 将已删除列的信息添加到自定义的撤销堆栈
+        customUndoStack.push({
+          headers: deletedColumnsHeaders,
+          data: deletedColumnsData,
+          index: index,
+        });
       },
+
       afterOnCellMouseDown: function(event, coords) {
         if((coords.row === -1 && coords.col >= 4) || (coords.row === -1 && coords.col === 3)) {
           var newName = prompt("请输入新的变量名称：");
@@ -428,6 +446,34 @@
         updateDropdown(); 
       },
     });
+
+  var customUndoStack = [];
+
+  function customUndo() {
+    if (customUndoStack.length > 0) {
+      // 从自定义撤销堆栈中获取最后一个元素
+      var lastRemoval = customUndoStack.pop();
+      var colHeaders = hot.getColHeader();
+      var data = hot.getData();
+
+      // 在正确的位置插入已删除的列
+      data.forEach(function(row, i) {
+        row.splice(lastRemoval.index, 0, ...lastRemoval.data[i]);
+      });
+      colHeaders.splice(lastRemoval.index, 0, ...lastRemoval.headers);
+
+      // 更新Hot实例
+      hot.updateSettings({
+        colHeaders: colHeaders,
+      });
+      hot.loadData(data);
+
+      // 再次更新列头设置以确保列头与数据匹配
+      hot.updateSettings({
+        colHeaders: colHeaders,
+      });
+    }
+  };
 
   function genDataFrameCode() {
     if(!checkTableRows() || !checkTableCols()) {
@@ -950,4 +996,3 @@ function updateDropdown() {
     }
   });
 </script>
-
