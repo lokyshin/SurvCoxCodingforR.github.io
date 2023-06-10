@@ -70,6 +70,7 @@ cat(
     "中位数值        ", as.character(median_sample), "\\n",
     "----------------------","\\n"
     )
+cat("请留意，R的可信区间计算不同于SPSS，也不同于Stata和Python的lifelines。\\n")
 
 km_curve = ggsurvplot(fit, df,
          pval = TRUE, #添加分层对比的p值
@@ -154,6 +155,7 @@ cat(
     "#Log-rank p value", "\\n\\n",
     km_curves_differ, "\\n"
     )
+cat("请留意，R的可信区间计算不同于SPSS，也不同于Stata和Python的lifelines。\\n")
 
 km_curve_Strata_factor = ggsurvplot(fit_Strata_factor, df,
            pval = TRUE, #添加分层对比的p值
@@ -218,6 +220,7 @@ cat(
     "*4 单因素Cox回归的p值", "\\n\\n",
     unicox, "\\n"
     )
+cat("请留意，R的可信区间计算不同于SPSS，也不同于Stata和Python的lifelines。\\n")
 
 cat("\\n分析结论\\n")
 cat(
@@ -259,6 +262,7 @@ cat(
     "*2 Log-rank p value", "\\n",
     "*3 单因素Cox回归的p值", "\\n\\n"
     )
+cat("请留意，R的可信区间计算不同于SPSS，也不同于Stata和Python的lifelines。\\n")
 
 cat(
     "总结报告","\\n",
@@ -347,7 +351,7 @@ cat(
     "中位数值        ", as.character(median_sample), "\\n",
     "----------------------","\\n"
     )
-
+cat("请留意，R的可信区间计算不同于SPSS，也不同于Stata和Python的lifelines。\\n")
 
 cat("\\nCox回归分析结果\\n")
 # 进行coxph分析并获取结果摘要
