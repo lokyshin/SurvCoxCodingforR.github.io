@@ -222,7 +222,7 @@ cat(
     )
 cat("请留意，R的可信区间计算不同于SPSS，也不同于Stata和Python的lifelines。\\n")
 
-cat("\\n分析结论\\n")
+cat("\\n\\n分析结论\\n")
 cat(
     "汇总报告","\\n",
     "---------------------------", "\\n",
@@ -260,18 +260,19 @@ cat(
     "---------------------------","\\n",
     "*1 95%可信区间", "\\n",
     "*2 Log-rank p value", "\\n",
-    "*3 单因素Cox回归的p值", "\\n\\n"
+    "*3 单因素Cox回归的p值"
     )
 cat("请留意，R的可信区间计算不同于SPSS，也不同于Stata和Python的lifelines。\\n")
 
 cat(
-    "总结报告","\\n",
+    "\\n总结报告\\n",
     "1 如全人群推断总体的Kaplan-Meier曲线所示，本研究总体预后时间（Time_to_event）为：", as.character(median_total),"[", as.character(lcl95_total), " - ", as.character(ucl95_total), "] 月。","\\n",
     "2 按照本研究Strata分层因素，两组预后时间（Time_to_event）分别为：", "\\n",
     "    ", Strata_factor0, ": ", as.character(round(median_Strata_factor0,3)), "[", as.character(round(lcl_Strata_factor0,3)), " - ", as.character(round(ucl_Strata_factor0,3)), "] 月;","\\n",
     "    ", Strata_factor1, ": ", as.character(round(median_Strata_factor1,3)), "[", as.character(round(lcl_Strata_factor1,3)), " - ", as.character(round(ucl_Strata_factor1,3)), "] 月;","\\n",
     "    ", km_curves_differ, "\\n",
-    "3 对Strata分层因素进行单因素Cox回归时发现，", unicox, "\\n"
+    "3 对Strata分层因素进行单因素Cox回归时发现，", unicox, "\\n",
+    "4 请谨慎看待本生存分析计算的p值，因为事件结局数量可能不足。\\n"
     )
 
 cat("\\n", "感谢您使用本程序进行统计分析，再见。", "\\n")
