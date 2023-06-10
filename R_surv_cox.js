@@ -419,13 +419,7 @@ summary_stats = df %>%
     Mean = round(mean(RDCvariate),3),
     SD = round(sd(RDCvariate),3),
     SE = round(sd(RDCvariate) / sqrt(n()),3),
-    Q1 = round(quantile(RDCvariate, 0.25),3),
     Median = round(median(RDCvariate),3),
-    Q3 = round(quantile(RDCvariate, 0.75),3),
-    IQR = round(IQR(RDCvariate),3),
-    \`95%CI\` = broom::tidy(t.test(RDCvariate)) %>% 
-                summarise(CI = paste(round(conf.low, 3), "to", round(conf.high, 3))) %>%
-                pull(CI),
     .groups = 'drop'
   )
 
