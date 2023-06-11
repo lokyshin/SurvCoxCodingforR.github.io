@@ -794,7 +794,7 @@ abline(h=-30, lty=2, col = rgb(0, 0, 0, alpha = 0.2))#设置透明度80%
 legend_labels = names(color_mapping)[names(color_mapping) %in% unique(df$Response_evaluation)]
 legend("bottomleft", inset=c(0.1,0.1), legend=legend_labels, 
        fill=color_mapping[legend_labels], 
-       title="Response", bty="n", cex=0.8, border='#D9CDBF')
+       title="", bty="n", cex=0.8, border='#D9CDBF')
 
 # 初始化绘制组别和组别图例开关
 addgroup <- 1
@@ -809,7 +809,7 @@ if (addgroup == 1) {
   # 添加关于组别的图例
   legend("bottomleft", inset=c(0.25,0.1), legend=paste("Groups", 0:(length(unique(df$Groups))-1)), 
          pch = group_shapes[1:length(unique(df$Groups))], 
-         title="Groups", bty="n", cex=0.8,border='#D9CDBF')
+         title="", bty="n", cex=0.8,border='#D9CDBF')
 }
 
 title(xlab="Patients id")
