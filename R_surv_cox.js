@@ -475,7 +475,7 @@ t_test_result = t.test(RDCvariate ~ RDCgroup, data = df, var.equal = TRUE)
 t_test_result_p = t_test_result$p.value
 
 #如果不符合正态分布，采用非参数检验，本程序采用Kruskal-Wallis检验
-if(any(normality_test_results_df$p.value <= 0.05)) {
+if(any(normality_test_results_df$p.value < 0.05)) {
   cat("\\nKruskal-Wallis检验结果", "\\n")
   print(kruskal_result)
   if(kruskal_p<0.05){
@@ -486,7 +486,7 @@ if(any(normality_test_results_df$p.value <= 0.05)) {
 }
 
 #如果符合正态分布,方差不齐，为三组或更多，本程序采用Kruskal-Wallis检验
-if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (unique_groups != 2)) {
+if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (unique_groups != 2)) {
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("Kruskal-Wallis检验结果", "\\n")
@@ -499,7 +499,7 @@ if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (u
 }
 
 #如果符合正态分布,方差不齐，且为两组，进行Welch's t检验
-if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (unique_groups == 2)) {
+if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (unique_groups == 2)) {
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("Welch's t检验结果", "\\n")
@@ -512,7 +512,7 @@ if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (u
 }
 
 #如果符合正态分布,方差齐，为三组或更多，进行F检验（单因素方差分析）
-if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (unique_groups != 2)) {
+if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (unique_groups != 2)) {
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("F检验（单因素方差分析）结果", "\\n")
@@ -524,7 +524,7 @@ if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (un
 }
 
 #如果符合正态分布,方差齐，且为两组，进行t检验
-if((any(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (unique_groups == 2)) {
+if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (unique_groups == 2)) {
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("t检验结果", "\\n")
