@@ -463,7 +463,7 @@ kruskal_p = kruskal_result$p.value
 
 #Welch's t检验
 wt_test_result = t.test(RDCvariate ~ RDCgroup, data = df, var.equal = FALSE)
-wt_test_result_p = t_test_result$p.value  
+wt_test_result_p = wt_test_result$p.value  
 
 #F检验（单因素方差分析）
 aov_result = aov(RDCvariate ~ as.factor(RDCgroup), data = df)
