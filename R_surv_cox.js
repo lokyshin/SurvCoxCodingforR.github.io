@@ -606,7 +606,7 @@ test_table <- function(TableData){
       cat("\\nThe table is a 2x2 table, the theoretical frequency T<5 but T≥1, and the total sample size n≥40, so the chi-square test with continuity correction is used.\\n")
     } else {
       result <- fisher.test(TableData)
-      cat("\\n表格是四格表，但有理论频数<<1 或总样本量<40，因此使用 Fisher’s 检验。\\n")
+      cat("\\n表格是四格表，但有理论频数<1 或总样本量<40，因此使用 Fisher’s 检验。\\n")
       cat("\\nThe table is a 2x2 table, but there are theoretical numbers T<1 or total sample size n<40, so Fisher's test is used.\\n")
     }
   } else {
