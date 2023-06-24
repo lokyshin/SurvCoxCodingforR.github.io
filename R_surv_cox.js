@@ -386,17 +386,17 @@ window.R_des_continuous= `# Code by Lokyshin (Lokyshin.net@202306)
 
 # 安装所需的包
 suppressPackageStartupMessages({
-  if(!require(tidyverse)) install.packages("tidyverse")
-  if(!require(dplyr)) install.packages("dplyr")
-  if(!require(broom)) install.packages("broom")
-  if (!require(purrr)) install.packages("purrr")
+  if(!require('tidyverse')) install.packages('tidyverse')
+  if(!require('dplyr')) install.packages('dplyr')
+  if(!require('broom')) install.packages('broom')
+  if (!require('purrr')) install.packages('purrr')
 })
 
 # 加载所需的包
-library(tidyverse)
-library(dplyr)
-library(broom)
-library(purrr)
+library('tidyverse')
+library('dplyr')
+library('broom')
+library('purrr')
 
 options(warn = -1)
 
@@ -404,14 +404,14 @@ cat("连续变量统计分析的R程序\\nby Lokyshin\\n")
 
 #定义数据集，命名为df
 df = data.frame(
-    RDCvariate = c(3.4,2.5,6.7,8,5.7,3.2,3.1,9.9,10,11,12,4.5,6.7,8.3,6.9,4.7,6.9,2.1,12.3,7.4),
-    RDCgroup = c(1,1,1,0,1,0,1,1,0,1,1,1,0,0,1,1,1,0,1,0)
+  RDCvariate = c(3.4,2.5,6.7,8,5.7,3.2,3.1,9.9,10,11,12,4.5,6.7,8.3,6.9,4.7,6.9,2.1,12.3,7.4),
+  RDCgroup = c(1,1,1,0,1,0,1,1,0,1,1,1,0,0,1,1,1,0,1,0)
 )
 cat("\\n研究数据集\\n")
 print(df)
 
 # 检查RDCgroup中的唯一值的数量
-unique_groups = length(unique(df$RDCgroup))
+groupsets = length(unique(df$RDCgroup))
 
 summary_stats = df %>%
   group_by(RDCgroup) %>%
@@ -432,27 +432,89 @@ print(summary_stats)
 cat("\\n下面将进行两组或多组的均数检验。这通常用于比较两组或多组的基线是否平齐", "\\n")
 cat("以下是两组或多组的均数比较流程：\\n",
     "1. 独立性假设\\n",
-    "2. 正态分布假设\\n",
-    "\t如果不符合正态分布，采用非参数检验，本程序采用Kruskal-Wallis检验\\n",
-    "\t如果符合正态分布，进入下一步\\n",
+    "2. 正态分布假设 Shapiro-Wilk test (n<=50) 或 Kolmogorov-Smirnov test (n>50)\\n",
+    "\\t如果不符合正态分布，采用非参数检验，对中位数采用 Mann-Whitney U 检验（2组）或 Kruskal-Wallis 检验（多组）\\n",
+    "\\t如果符合正态分布，进入下一步\\n",
     "3. 方差齐性假设\\n",
-    "\t如果方差齐，且为两组，进行t检验；如果为三组或更多，进行F检验（单因素方差分析）\\n",
-    "\t如果方差不齐，且为两组，进行Welch's t检验；如果为三组或更多，本程序采用Kruskal-Wallis检验\\n",
+    "\\t如果方差齐，且为两组，进行t检验；如果为三组或更多，进行F检验（单因素方差分析）\\n",
+    "\\t如果方差不齐，且为两组，进行Welch's t检验；如果为三组或更多，本程序采用Kruskal-Wallis检验\\n",
     sep = ""
 )
 
-# 进行Shapiro-Wilk检验(正态性检验)
-normality_test_results = tapply(df$RDCvariate, df$RDCgroup, shapiro.test)
+# 进行Shapiro-Wilk检验
 
-# 创建一个数据框来保存结果
-normality_test_results_df = data.frame(
-  RDCgroup = names(normality_test_results),
-  W = sapply(normality_test_results, function(x) x$statistic),
-  p.value = sapply(normality_test_results, function(x) x$p.value)
+# 初始化一个空的数据框
+normality_test_df <- data.frame(
+  Group = integer(),
+  SampleSize = integer(),
+  Test = character(),
+  Statistic = numeric(),
+  p_value = numeric(),
+  stringsAsFactors = FALSE
 )
-cat("\\nRDCvariate按RDCgroup分组的正态性检验结果", "\\n\\n")
-print(normality_test_results_df)
 
+# 将RDCvariate按照RDCgroup不同的值分组
+groups <- split(df$RDCvariate, df$RDCgroup)
+
+# 对每一组进行检验
+for (i in 1:length(groups)){
+  # 获取当前组的数据
+  group_data <- groups[[i]]
+  
+  # 获取当前组的大小
+  group_size <- length(group_data)
+  
+  # 根据组的大小选择检验方法
+  if(group_size <= 50){
+    # 组的大小 <= 50，进行Shapiro-Wilk检验
+    test_result <- shapiro.test(group_data)
+    test_name <- 'Shapiro-Wilk'
+  } else {
+    # 组的大小 > 50，进行Kolmogorov-Smirnov检验
+    test_result <- ks.test(group_data, "pnorm", mean=mean(group_data), sd=sd(group_data))
+    test_name <- 'Kolmogorov-Smirnov'
+  }
+  
+  # 创建一个新的数据框，包含当前组的检验结果
+  result_df <- data.frame(
+    Group = names(groups)[i],
+    SampleSize = group_size,
+    Test = test_name,
+    Statistic = as.numeric(test_result$statistic),
+    p_value = as.numeric(test_result$p.value),
+    stringsAsFactors = FALSE
+  )
+  
+  # 将当前组的检验结果添加到数据框中
+  normality_test_df <- rbind(normality_test_df, result_df)
+}
+
+cat("\\nRDCvariate按RDCgroup分组的正态性检验结果", "\\n\\n")
+print(normality_test_df)
+
+if (groupsets <3) {
+  #Welch's t检验
+  wt_test_result = t.test(RDCvariate ~ RDCgroup, data = df, var.equal = FALSE)
+  wt_test_result_p = wt_test_result$p.value 
+  
+  #成组t检验
+  t_test_result = t.test(RDCvariate ~ RDCgroup, data = df, var.equal = TRUE)
+  t_test_result_p = t_test_result$p.value
+  
+  # 找到RDCgroup的两个唯一值
+  unique_groups <- unique(df$RDCgroup)
+  
+  # 按照这两个唯一值来提取数据
+  group0 <- df[df$RDCgroup == unique_groups[1],]$RDCvariate
+  group1 <- df[df$RDCgroup == unique_groups[2],]$RDCvariate
+  
+  # 进行 Mann-Whitney U 检验
+  Mann_Whitney_result <- wilcox.test(group0, group1)
+  
+  # 提取 p 值
+  Mann_Whitney_p <- Mann_Whitney_result$p.value
+  
+}
 # 进行方差齐性检验
 bartlett_result = bartlett.test(RDCvariate ~ RDCgroup, data = df)
 bartlett_p = bartlett_result$p.value
@@ -461,32 +523,44 @@ bartlett_p = bartlett_result$p.value
 kruskal_result = kruskal.test(RDCvariate ~ RDCgroup, data = df)
 kruskal_p = kruskal_result$p.value
 
-#Welch's t检验
-wt_test_result = t.test(RDCvariate ~ RDCgroup, data = df, var.equal = FALSE)
-wt_test_result_p = wt_test_result$p.value  
-
 #F检验（单因素方差分析）
 aov_result = aov(RDCvariate ~ as.factor(RDCgroup), data = df)
 aovm = summary(aov_result)
 aovm_p = aovm[[1]]$\`Pr(>F)\`[1]
 
-#成组t检验
-t_test_result = t.test(RDCvariate ~ RDCgroup, data = df, var.equal = TRUE)
-t_test_result_p = t_test_result$p.value
 
-#如果不符合正态分布，采用非参数检验，本程序采用Kruskal-Wallis检验
-if(any(normality_test_results_df$p.value < 0.05)) {
-  cat("\\nKruskal-Wallis检验结果", "\\n")
-  print(kruskal_result)
-  if(kruskal_p<0.05){
-    cat("
-    组间基线情况：\\n分组存在不符合正态分布的情况。\\n当前基线不平齐。基线描述建议采用中位数和四分位间距。")}else{cat("基线情况：\\n分组存在不符合正态分布的情况。\\n当前基线平齐。基线描述建议采用中位数和四分位间距。
-    ")
+#如果不符合正态分布，采用非参数检验，本程序展示非参数检验结果
+if(any(normality_test_df$p.value < 0.05)) {
+  cat("\\n非参数检验结果", "\\n")
+  if (groupsets == 2) {
+    cat("\\nMann-Whitney U 检验", "\\n")
+    print(Mann_Whitney_result)
+      if (Mann_Whitney_p < 0.05) {
+        cat("组间基线情况：\\n分组存在不符合正态分布的情况。\\n当前基线不平齐。基线描述建议采用中位数和四分位间距。")
+        }
+      else{
+        cat("组间基线情况：\\n分组存在不符合正态分布的情况。\\n当前基线平齐。基线描述建议采用中位数和四分位间距。
+      ")
+      }
   }
+  
+  if (groupsets > 2) {
+    cat("\\nKruskal-Wallis 检验", "\\n")
+    print(kruskal_result)
+    if (kruskal_p < 0.05) {
+      cat("组间基线情况：\\n分组存在不符合正态分布的情况。\\n当前基线不平齐。基线描述建议采用中位数和四分位间距。")
+    }
+    else{
+      cat("组间基线情况：\\n分组存在不符合正态分布的情况。\\n当前基线平齐。基线描述建议采用中位数和四分位间距。
+      ")
+    }
+  }
+  
+
 }
 
 #如果符合正态分布,方差不齐，为三组或更多，本程序采用Kruskal-Wallis检验
-if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (unique_groups != 2)) {
+if((all(normality_test_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (groupsets != 2)) {
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("Kruskal-Wallis检验结果", "\\n")
@@ -495,11 +569,11 @@ if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (u
     cat("
     组间基线情况：\\n符合正态分布，但方差不齐。\\n当前基线不平齐。基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。")}else{cat("基线情况：\\n符合正态分布，但方差不齐。\\n当前基线平齐。基线描述基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。
     ")
-  }
+    }
 }
 
 #如果符合正态分布,方差不齐，且为两组，进行Welch's t检验
-if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (unique_groups == 2)) {
+if((all(normality_test_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (groupsets == 2)) {
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("Welch's t检验结果", "\\n")
@@ -508,11 +582,11 @@ if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p <= 0.05) && (u
     cat("
     组间基线情况：\\n符合正态分布，但方差不齐。\\n当前基线不平齐。基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。")}else{cat("基线情况：\\n符合正态分布，但方差不齐。\\n当前基线平齐。基线描述基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。
     ")
-  }
+    }
 }
 
 #如果符合正态分布,方差齐，为三组或更多，进行F检验（单因素方差分析）
-if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (unique_groups != 2)) {
+if((all(normality_test_df$p.value > 0.05)) && (bartlett_p > 0.05) && (groupsets != 2)) {
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("F检验（单因素方差分析）结果", "\\n")
@@ -520,11 +594,11 @@ if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (un
   if(aovm_p<0.05){cat("
     组间基线情况：\\n符合正态分布，方差齐。\\n当前基线不平齐。基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。")}else{cat("基线情况：\\n符合正态分布，方差齐。\\n当前基线平齐。基线描述基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。
     ")
-  }
+    }
 }
 
 #如果符合正态分布,方差齐，且为两组，进行t检验
-if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (unique_groups == 2)) {
+if((all(normality_test_df$p.value > 0.05)) && (bartlett_p > 0.05) && (groupsets == 2)) {
   cat("\\nRDCvariate按RDCgroup分组的方差齐性检验结果", "\\n")
   print(bartlett_result)
   cat("t检验结果", "\\n")
@@ -533,7 +607,7 @@ if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (un
     cat("
     组间基线情况：\\n符合正态分布，方差齐。\\n当前基线不平齐。基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。")}else{cat("基线情况：\\n符合正态分布，方差齐。\\n当前基线平齐。基线描述基线描述可采用均数和95%可信区间（生存分析用）或均数与标准差（一般）。
     ")
-  }
+    }
 }
 
 # 绘图箱图
@@ -541,13 +615,13 @@ if((all(normality_test_results_df$p.value > 0.05)) && (bartlett_p > 0.05) && (un
 df$RDCgroup <- as.factor(df$RDCgroup)
 # 创建箱图
 ggplot(df, aes(x=RDCgroup, y=RDCvariate, fill=RDCgroup)) +
-    geom_boxplot() +
-    labs(title="Boxplot of RDCvariate by Group", 
-         x="Group", 
-         y="RDCvariate",
-         fill="Group") +
-    theme_minimal()
-cat("\\n\n您可在下方查看分组数据的箱图。", "\\n")    
+  geom_boxplot() +
+  labs(title="Boxplot of RDCvariate by Group", 
+       x="Group", 
+       y="RDCvariate",
+       fill="Group") +
+  theme_minimal()
+cat("\\n\\n您可在下方查看分组数据的箱图。", "\\n")    
 
 cat("\\n\\n感谢您使用本程序进行统计分析，再见。", "\\n")
 `;
@@ -632,20 +706,20 @@ test_table <- function(TableData){
   return(result)
 }
 
+# 打印判断标准
+cat("\\n1. 计算期望频率和最小频率，以及总样本量")
+cat("\\n2. 检查表格类型\\n")
+cat("\\t如果是2x2表格，执行以下操作：\\n")
+cat("\\t\\t如果所有的理论频数≥5，并且总样本量≥40，进行pearson卡方检验\\n")
+cat("\\t\\t如果1≤理论频数<5，并且总样本量≥40，进行连续性校正的卡方检验\\n")
+cat("\\t\\t如果理论频数<1 或总样本量<40，进行Fisher’s 检验")
+cat("\\n3. 如果不是2x2表格，执行以下操作：\\n")
+cat("\\t如果R×C表中理论频数<5的格子不超过总格子数的1/5，并且所有格子的理论频数≥1，进行pearson卡方检验\\n")
+cat("\\t如果不满足上述条件，进行Fisher’s 检验\\n")
+
 # 打印行列表
 cat("\\nRD_characteristic X RD_classfication\\n行列表\\n")
 cross_table
-
-# 打印判断标准
-cat("1. 计算期望频率和最小频率，以及总样本量\\n")
-cat("\\n2. 检查表格类型\\n")
-cat("2.1 如果是2x2表格，执行以下操作：\\n")
-cat("2.1.1 如果所有的理论频数≥5，并且总样本量≥40，进行pearson卡方检验\\n")
-cat("2.1.2 如果1≤理论频数<5，并且总样本量≥40，进行连续性校正的卡方检验\\n")
-cat("2.1.3 如果理论频数<1 或总样本量<40，进行Fisher’s 检验\\n")
-cat("\\n3. 如果不是2x2表格，执行以下操作：\\n")
-cat("3.1 如果R×C表中理论频数<5的格子不超过总格子数的1/5，并且所有格子的理论频数≥1，进行pearson卡方检验\\n")
-cat("3.2 如果不满足上述条件，进行Fisher’s 检验\\n")
 
 # 对cross_table进行检验
 test_table(cross_table)
@@ -662,12 +736,19 @@ window.R_des_ranked= `# Code by Lokyshin (Lokyshin.net@202306)
 
 options(warn = -1)
 
-cat("等级资料统计描述的R程序\\nby Lokyshin\\n")
+cat("两组或多组序（组别无序）有序变量的分布比较的R程序\\nby Lokyshin\\n")
 
 #定义数据集，命名为df
 df = data.frame(
-    RD_grade_value = c(1,1,0,0,1,0,1,1,1,0,1,0,1,0,1,0),
-    RD_grade_group = c(0,1,1,0,0,1,0,1,1,0,1,0,1,0,1,0)
+  RD_grade_value = c(1,1,0,0,1,0,1,1,1,0,1,0,1,0,1,0),
+  RD_grade_group = c(0,1,1,0,0,1,0,1,1,0,1,0,1,0,1,0)
+)
+
+cat("\\n基于以下规则，进行有序变量的中位数比较：\\n",
+    "1. 2组比较\\n",
+    "\\t比较两组独立的有序分类变量：Mann-Whitney U 检验。\\n",
+    "2. 2组以上的比较\\n",
+    "\\t比较多组独立的有序分类变量：Kruskal-Wallis H 检验。\\n"
 )
 
 # 创建行列表
@@ -675,23 +756,45 @@ cross_table = xtabs(~ RD_grade_value + RD_grade_group, data = df)
 rownames(cross_table) <- c("RD_grade_value 0", "RD_grade_value 1")  # 调整行名称
 colnames(cross_table) = c("RD_grade_group 0", "RD_grade_group 1")  # 调整列名称
 
-#Kruskal-Wallis检验
-kruskal_result = kruskal.test(RD_grade_value ~ RD_grade_group, data = df)
-# 提取p值
-kruskal_p = kruskal_result$p.value
+groupsets <- length(unique(df$RD_grade_group))
+
+# 定义检验函数
+run_test <- function(data, groupsets){
+  # 根据组数选择使用的检验方法
+  if(groupsets == 2){
+    # 使用Mann-Whitney U检验
+    cat("\\nMann-Whitney U检验")
+    test_result <- wilcox.test(RD_grade_value ~ RD_grade_group, data = data)
+    test_name <- "Mann-Whitney U"
+  } else {
+    # 使用Kruskal-Wallis H检验
+    cat("\\nKruskal-Wallis H检")
+    test_result <- kruskal.test(RD_grade_value ~ RD_grade_group, data = data)
+    test_name <- "Kruskal-Wallis H"
+  }
   
+  # 返回检验结果和检验方法名称
+  list(test_result = test_result, test_name = test_name)
+}
+
 # 打印行列表
-cat("\\nRD_characteristic X RD_classfication\\n行列表\\n")
-cross_table
+cat("\\n行列表 RD_grade_value X RD_grade_group\\nCross Table\\n")
+print(cross_table)
+
+# 执行检验
+test_result <- run_test(df, groupsets)
 
 # 打印检验结果
-kruskal_result
+print(test_result$test_result)
+
+# 获取p值
+p_value <- test_result$test_result$p.value
 
 # 进行结果判断
-if(kruskal_p < 0.05){
-  cat("p值<0.05，差异有统计学意义。\\n")
+if(p_value < 0.05){
+  cat("p-value < 0.05, 有显著统计学差异。\\n")
 } else {
-  cat("p =", round(kruskal_p,3), "，没有统计学差异。\\n")
+  cat("p =", round(p_value,3), ", 无显著统计学差异。\\n")
 }
 
 cat("\\n感谢您使用本程序进行统计分析，再见。", "\\n")
