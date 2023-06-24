@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>R-survival Tools</title>
+  <link rel="icon" href="favicon.ico">
+  <script src="handsontable.full.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="handsontable.full.min.css">
+  <script src="R_surv_cox.js"></script>  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #F2F2F2;
+      font-size: 14px;
+    }
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      margin: 0 auto;
+      position: relative;
+    }
+    body, 
+    .container {
+      background-color: transparent; /* this will make the body and container backgrounds transparent */
+    } 
+    h1 {
+      color: #336699;
+      font-size: 22px;
+      margin: 0;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    h2 {
+      color: #336699;
+      font-size: 18px;
+      margin: 0;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    h3 {
+      color: #336699;
+      font-size: 14px;
+      margin: 0;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .area {
+      margin-bottom: 20px;
+    }
+    .leftSide {
+      display: flex;
+      flex-direction: column;
+    }
+    textarea {
+      width: 100%;
+      margin-top: 20px;
+    }
+    .rightSide {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .rightSide .area {
+      width: 100%;
+    }
+    .footer {
+      font-size: 12px;
+      color: #999;
+      text-align: left;
+      margin-top: 40px;
+    }
+    @media (max-width: 600px) {
+      .container {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+      }
+      #leftSide, .rightSide {
+        flex-direction: column;
+      }
+      .rightSide .area {
+        margin-top: 20px;
+      }
+    }
+    #contentSection {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: flex;
+    }
+
+    #textContent60 {
+      width: 60%; 
+    }
+    #textContent30 {
+      width: 30%; 
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>R-生存分析工具集 v2023</h1>
+    <div id="leftSide">
+      <div id="databaseArea" class="area">
+        <h2>数据编辑区</h2>
+        <div id="hot"></div>
+        <br>
+      <div id="functionArea" class="area">
+        <h2>统计功能区</h2>    
+        <h3>常用功能</h>
+        <p>
+        <button onClick="genRdf()">生成数据集</button> or      
+        <button id="genRcodes_strata_or_group" onClick="genRcodes_strata_or_group()">全人群生存分析与Kaplan-Meier曲线，与按组分析：</button>
+        <select id="colSelect_strata_or_group" name="colSelect_strata_or_group"></select>
+        <hr>
+        <h3>单因素与多因素Cox回归分析</h3>
+          <div id="contentSection">
+            <div id="textContent30">
+              1. 请在下方选择一个变量，然后开始：
+              <button id="genRcodesCoxUni" onClick="genRcodesCoxUni()">单因素Cox回归</button>
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;
+              <select id="colSelect_coxuni" name="colSelect_coxuni"></select>
+              <br>
+            </div>
+            <div id="textContent60">
+              2. 请在下方按住‘Ctrl’或‘Shift’选择多个变量，然后开始：
+              <button id="genRcodesCoxMul" onClick="genRcodesCoxMul()">多因素Cox回归</button>
+              <br>&nbsp;&nbsp;&nbsp;&nbsp;
+              <select id="multiSelect_coxmulti" multiple></select> 
+
+            </div>
+          </div>
+          <hr>
+          <h3>绘制Nomogram</h3>
+              <div>
+                请在下方按住‘Ctrl’或‘Shift’选择多个变量（注意不要选择Time_to_event、Event或非数值列），然后开始：
+                <button id="genRcodesNomoMul" onClick="genRcodesNomoMul()">开始生存Nomo图</button>
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;
+                <select id="multiSelect_nomomulti" multiple></select> 
+              </div>
+        <hr>
+          <div id="contentSection">
+            <div id="textContent60">
+              <h3>绘制瀑布图</h3>
+              按照每个患者的Patient_id、Response_evaluation(肿瘤缓解评估结果)*和
+              <select id="colSelect_wfp_rr" name="colSelect_wfp_rr"></select>  
+              <button id="genRcodeswfplot" onClick="genRcodesR_wfplot()">绘制瀑布图</button>
+              <br>
+              <i>高级选项</i>
+              <br>
+              开启分组: 
+              <input type="checkbox" id="Checkbox_wfp_group_filter" checked> 
+              <label for="Checkbox_wfp_group" >分组: </label>
+              <select id="colSelect_wfp_group" name="colSelect_wfp_group"></select> 
+              <br>
+              🎨画图调色板：
+              <br>
+              选择CR颜色: <input type="color" id="wfp_cr" value="#CCEAFC">
+              <br>
+              选择PR颜色: <input type="color" id="wfp_pr" value="#D2E8E3">
+              <br>
+              选择SD颜色: <input type="color" id="wfp_sd" value="#FFE8B5">
+              <br>
+              选择PD颜色: <input type="color" id="wfp_pd" value="#F4E2DE">
+              <br>
+              选择NE颜色: <input type="color" id="wfp_ne" value="#5D6A73"> (Not Evaluation, 如有)
+              <br>
+              选择NA颜色: <input type="color" id="wfp_na" value="#C2C3BE"> (Not Aavalible, 如有)
+              <br>
+              *缓解评估结果的系统保留变量名称须是“Response_evaluation”，为“CR”、“PR”、“SD”、“PD”、“NE”或“NA”的一种。
+              <br>缓解率只需要录入正负百分比（省略%）。
+            </div>
+            <div id="imageContent">
+              <img src="waterfall-plot.png" alt="瀑布图" style="height: 320px;">
+            </div>
+          </div>
+        <hr>
+          <div id="contentSection">
+            <div id="textContent60">
+              <h3>绘制游泳图</h3>
+              按照每个患者的Patient_id、Time_to_event和Response_evaluation(肿瘤缓解评估结果)* 
+              <button id="genRcodes_sw_plot" onClick="genRcodesR_swplot()">绘制游泳图</button>
+              <br>
+              <i>高级选项</i>
+              <br>
+              开启分组: 
+              <input type="checkbox" id="Checkbox_sw_group_filter" checked> 
+              <label for="Checkbox_sw_group" >分组: </label>
+              <select id="colSelect_sw_group" name="colSelect_sw_group"></select> 
+              <br>
+              🎨画图调色板：
+              <br>
+              Event颜色:&nbsp;&nbsp;&nbsp;&nbsp;<input type="color" id="sw_ev" value="#45958E">
+              <br>
+              选择CR颜色: <input type="color" id="sw_cr" value="#E8CCC7">
+              <br>
+              选择PR颜色: <input type="color" id="sw_pr" value="#CEE0E6">
+              <br>
+              选择SD颜色: <input type="color" id="sw_sd" value="#F1E0CE">
+              <br>
+              选择PD颜色: <input type="color" id="sw_pd" value="#FFE7AB">
+              <br>
+              选择NE颜色: <input type="color" id="sw_ne" value="#F2EFF8"> (Not Evaluation, 如有)
+              <br>
+              选择NA颜色: <input type="color" id="sw_na" value="#FBA57E"> (Not Aavalible, 如有)
+              <br>
+              *结果须为“CR”、“PR”、“SD”、“PD”、“NE”或“NA”的一种，变量名必须是“Response_evaluation”。
+              <br>如只看患者的Time_to_event游泳图，可统一填写成“NA”或“NE”。
+            </div>
+            <div id="imageContent">
+              <img src="swimmer-plot.png" alt="游泳图" style="height: 350px;">
+            </div>
+          </div>
+        <hr>
+        <h3>连续变量的统计描述与分组对比</h3>
+        <h4>比较均数/中位数是否相同</h4>
+        请选择一个待分析的连续变量：
+        <select id="colSelect_R_des_continuous" name="colSelect_R_des_continuous"></select>
+         请选择组别：
+        <select id="colSelect_R_des_continuous_by" name="colSelect_R_des_continuous_by"></select> 
+        <button id="genRcodesR_des_continuous_by_btn" onClick="genRcodesR_des_continuous_by()"> 开始分析！</button>
+        <br>
+        请注意：分析的变量需要是连续变量；组别需要是分类变量（非等级变量）
+        <hr>
+        <h3>分类变量的统计描述与分布对比</h3>
+        <h4>比较各组整体分布是否相同</h4>
+        请选择一个待分析的分类变量：  
+        <select id="colSelect_R_des_count_R" name="colSelect_R_des_count_R"></select>
+         请选择组别：
+        <select id="colSelect_R_des_count_C" name="colSelect_R_des_count_C"></select> 
+        <button id="genRcodesR_des_count" onClick="genRcodesR_des_count()"> 开始分析！</button>
+        <br>
+        请注意分析变量和组别都需要是分类变量（非等级变量）。
+        <hr>
+        <h3>等级变量的统计分析(组别 > 1)</h3>
+        <h4>比较各组整体中位数是否相同</h4>
+        请选择一个待分析的等级变量（类别>2）
+        <select id="colSelect_R_des_ranked_R" name="colSelect_R_des_ranked_R"></select>
+         请选择组别：
+        <select id="colSelect_R_des_ranked_C" name="colSelect_R_des_ranked_C"></select> 
+        <button id="genRcodesR_des_ranked" onClick="genRcodesR_des_ranked()"> 开始分析！</button>
+        <br>
+        请留意分析的变量需要是等级变量（非分类变量）。
+        <hr>
+      </div>
+    <div id="rightSide">
+      <div id="rcodesArea" class="area">
+        <h2>R代码生成区</h2>
+        <textarea id="Rcodes_textarea" rows="10" cols="50"></textarea>
+      </div>
+    </div>
+    <p class="footer">
+      Created by Lokyshin Zhao
+      <br>
+      <br>
+      使用说明 
+      <br>
+      1. 在"数据编辑区"中输入数据。变量名称“Patient_id"、“Strata"、“Time_to_event" 和 “Event" 作为系统保留变量。数据输入支持从电子表格复制和粘贴，可点击列名更改变量名称，可在表格区域右键添加或删除行和列。
+      <br>
+      2. 你可以点击“生成数据框架”以生成R使用的数据集，或点击其他按钮以生成完整的用于生存分析的 R 代码。包括生存分析、KM 曲线绘制和 Cox 单因素分析、连续变量、分类变量、等级变量分组比较等功能。代码加入了统计分析，可根据统计结果自动给出分析报告和结论，但仅供参考。
+      <br>
+      3. 粘贴数据、选择变量、点击按钮即可自动生成R代码并复制到剪贴板，在打开的在线R软件中粘贴到代码区域点击运行即可轻松取得结果。
+      <br>
+      4. <u>数据在浏览器和我的服务器均无保留，但请留意本代码调用的在线服务可能存留，如github、rrdr.io。请谨慎使用，不要录入敏感信息。</u>
+      <br>
+      <br>
+      我提供的其他工具：
+      <br>
+      <a href = https://pysurtool.lokyshin.net target="_blank">PySurTool - A python based survival analysis tool</a>
+      <br>
+      <a href = https://bing.lokyshin.net target="_blank">New bing on lokyshin.net</a>
+      <br> 
+      <a href = https://chat.lokyshin.net target="_blank">ChatGPT on lokyshin.net</a>      
+      <br>
+      <br>
+      Copyright(r) <a href = https://lokyshin.net target="_blank">lokyshin.net</a>   
+    </p>
+  </div>
+     <script>
+    var data = [
+      ["1", "2.6", "1", "1", "0", "-20", "SD"],
+      ["2", "9.3", "1", "1", "1", "22", "PD"],
+      ["3", "8.2", "0", "0", "1", "6", "PD"],
+      ["4", "12.8", "0", "1", "0", "0", "SD"],
+      ["5", "7.2", "1", "0", "1", "15", "SD"],
+      ["6", "11.6", "1", "1", "1", "20", "SD"],
+      ["7", "17.9", "0", "0", "0", "19", "SD"],
+      ["8", "9.2", "1", "1", "1", "26", "NE"],
+      ["9", "2.8", "1", "1", "1", "-37", "PR"],
+      ["10", "10.4", "0", "0", "0", "-30", "PR"], 
+      ["11", "17.4", "0", "0", "0", "0", "SD"],     
+      ["12", "4.8", "0", "0", "0", "-42", "PR"],
+      ["13", "16.1", "1", "1", "1", "-28", "PR"],
+      ["14", "12.3", "0", "0", "0", "-30", "PR"],
+      ["15", "11.7", "1", "0", "1", "-37", "PD"],
+      ["16", "9.8", "0", "0", "1", "-42", "PR"],
+      ["17", "9.8", "0", "0", "1", "-100", "CR"],
+      ["18", "9.8", "0", "0", "1", "-8", "SD"],
+      ["19", "9.8", "0", "0", "1", "-15", "SD"],
+      ["20", "9.8", "0", "0", "1", "-24", "SD"],
+      ["21", "9.8", "0", "0", "1", "28", "PD"]      
+    ];
+
+    var container = document.getElementById('hot');
+    var hot = new Handsontable(container, {
+      data: data,
+      colHeaders: ["Patient_id", "Time_to_event", "Event", "Groups", "Factor", "Response_Rate", "Response_evaluation"],
+      contextMenu: {
+        items: {
+          "copy": {name:'复制 | Ctrl + C'},
+          "cut": {name:'剪切 | Ctrl + X'},
+          "paste": {
+            name:'粘贴 | 因浏览器限制请使用 Ctrl + V',
+            disabled: function() { 
+              return true; 
+            }
+          },
+          "undo": {name:'撤销 | Ctrl + Z'},
+          "redo": {name:'重做 | Ctrl + Y'},
+          "hsep1": "---------", 
+          "col_right": {
+            name: '右侧添加列',
+            disabled: function() {
+              return this.getSelectedLast()[1] < 3; // Disable "Insert column right" if first four columns are selected
+            }
+          },
+          "col_left": {
+            name: '左侧添加列',
+            disabled: function() {
+              return this.getSelectedLast()[1] <= 3; // Disable "Insert column left" if first four columns are selected
+            }
+          },
+          "remove_col": {
+             name: '删除列',
+             disabled: function() {
+               // this.getSelectedLast() returns an array [startRow, startCol, endRow, endCol]
+               const selectedLast = this.getSelectedLast();
+               if (selectedLast) {
+                 const startCol = selectedLast[1];
+                 const endCol = selectedLast[3];
+                 // Check if any of the first four columns are selected
+                 return (startCol < 4 || endCol < 4);
+                } else {
+                  return false;
+                }
+              }
+            },
+          "hsep2": "---------",
+          "row_below": {name:'下方添加行'},
+          "row_above": {name:'上方添加行'},
+                    "remove_row": {
+               name: '删除行',
+            disabled: function() {
+              let disableRemoveRow = false;
+              let selected = this.getSelected();  // returns an array of arrays [startRow, startCol, endRow, endCol]
+              if(selected !== undefined) {
+                selected.forEach(selection => {
+                  // Iterate through each selected column
+                  for (let i = selection[1]; i <= selection[3]; i++) {
+                    if ((selection[2] - selection[0] + 1) === hot.countRows()) {
+                      disableRemoveRow = true;
+                    }
+                  }
+                });
+              }
+              // Disable "Remove row" if all rows in any column are selected
+              return disableRemoveRow;
+            }
+          },
+        }
+      },
+      minSpareRows: 0,
+      licenseKey: 'non-commercial-and-evaluation',
+      afterChange: function (change, source) {
+        if (source === 'loadData') {
+          return; 
+        }
+        updateDropdown(); 
+      },
+      afterCreateCol: function(index, amount) {
+        var colHeaders = this.getColHeader();
+        for(var i=0; i<amount; i++) {
+          let newColName = "New_col"+(colHeaders.length+1);
+          while(colHeaders.includes(newColName)) {
+            newColName = "New_col"+(colHeaders.length+i+1);
+          }
+          colHeaders.push(newColName);
+        }
+        this.updateSettings({colHeaders: colHeaders});
+        updateDropdown(); 
+      },
+
+      afterRemoveCol: function(index, amount) {
+        var colHeaders = this.getColHeader().slice(0);
+        var originalData = this.getSourceDataArray().slice(0);
+
+        // 为删除的列创建备份
+        var deletedColumnsData = originalData.map(function(row) {
+          return row.slice(index, index + amount);
+        });
+        var deletedColumnsHeaders = colHeaders.slice(index, index + amount);
+
+        // 更新列头，但不调用loadData()，因为这会清空撤销堆栈
+        this.updateSettings({
+          colHeaders: colHeaders,
+        });
+
+        // 将已删除列的信息添加到自定义的撤销堆栈
+        customUndoStack.push({
+          headers: deletedColumnsHeaders,
+          data: deletedColumnsData,
+          index: index,
+        });
+      },
+
+      afterOnCellMouseDown: function(event, coords) {
+        if((coords.row === -1 && coords.col >= 4) || (coords.row === -1 && coords.col === 3)) {
+          var newName = prompt("请输入新的变量名称：");
+          if(newName !== null) {
+            // Check column name for validity
+            var re = /^[A-Za-z][A-Za-z0-9_]*[A-Za-z0-9]$/;
+            if(re.test(newName) === false) {
+              alert('列名必须以字母开头，不能包含任何特殊字符或空格。');
+            } else {
+              var colHeaders = this.getColHeader();
+              if(colHeaders.includes(newName)) {
+                alert('列名已存在或不可用。');
+              } else {
+                colHeaders[coords.col] = newName;
+                this.updateSettings({colHeaders: colHeaders});
+              }
+            }
+          }
+        }
+        updateDropdown(); 
+      },
+    });
+
+  var customUndoStack = [];
+
+  function customUndo() {
+    if (customUndoStack.length > 0) {
+      // 从自定义撤销堆栈中获取最后一个元素
+      var lastRemoval = customUndoStack.pop();
+      var colHeaders = hot.getColHeader();
+      var data = hot.getData();
+
+      // 在正确的位置插入已删除的列
+      data.forEach(function(row, i) {
+        row.splice(lastRemoval.index, 0, ...lastRemoval.data[i]);
+      });
+      colHeaders.splice(lastRemoval.index, 0, ...lastRemoval.headers);
+
+      // 更新Hot实例
+      hot.updateSettings({
+        colHeaders: colHeaders,
+      });
+      hot.loadData(data);
+
+      // 再次更新列头设置以确保列头与数据匹配
+      hot.updateSettings({
+        colHeaders: colHeaders,
+      });
+    }
+  };
+
+  function genDataFrameCode() {
+    if(!checkTableRows() || !checkTableCols()) {
+      return null;
+    }
+
+    let colHeaders = hot.getColHeader();
+    let output = 'df = data.frame(\n';
+    for(let colIndex=0; colIndex<colHeaders.length; colIndex++) {
+      let colData = '    '+colHeaders[colIndex]+' = c(';
+      for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
+        let cellData = hot.getDataAtCell(rowIndex, colIndex);
+        if(cellData !== null && cellData !== '') {
+          // Check if cellData is not a number, if not, add single quotes around it
+          if(isNaN(Number(cellData.trim()))) {
+            cellData = `'${cellData}'`;
+          }
+          colData += cellData + ',';
+        }
+      }
+      colData = colData.slice(0, -1) + ')';
+      output += colData + ',\n';
+    }
+    output = output.slice(0, -2) + '\n)';
+    return output;
+  }
+
+function updateDropdown() {
+    let dropdown_strata_or_group = document.getElementById('colSelect_strata_or_group');  
+    let dropdown_coxuni = document.getElementById('colSelect_coxuni');
+    let dropdown_colSelect_R_des_continuous = document.getElementById('colSelect_R_des_continuous');
+    let dropdown_colSelect_R_des_continuous_by = document.getElementById('colSelect_R_des_continuous_by');
+    let dropdown_colSelect_R_des_count_R = document.getElementById('colSelect_R_des_count_R');
+    let dropdown_colSelect_R_des_count_C = document.getElementById('colSelect_R_des_count_C');
+    let dropdown_colSelect_R_des_ranked_R = document.getElementById('colSelect_R_des_ranked_R');
+    let dropdown_colSelect_R_des_ranked_C = document.getElementById('colSelect_R_des_ranked_C');
+    let dropdown_colSelect_R_wfp_rr = document.getElementById('colSelect_wfp_rr');
+    let dropdown_colSelect_R_wfp_group = document.getElementById('colSelect_wfp_group');    
+    let dropdown_colSelect_R_sw_group = document.getElementById('colSelect_sw_group');    
+    let multiSelect_coxmulti = document.getElementById('multiSelect_coxmulti');
+    let multiSelect_nomomulti = document.getElementById('multiSelect_nomomulti');
+    let colHeaders = hot.getColHeader();
+    dropdown_strata_or_group.innerHTML = '';
+    dropdown_coxuni.innerHTML = '';
+    dropdown_colSelect_R_des_continuous.innerHTML = '';
+    dropdown_colSelect_R_des_continuous_by.innerHTML = '';
+    dropdown_colSelect_R_des_count_R.innerHTML = '';
+    dropdown_colSelect_R_des_count_C.innerHTML = '';
+    dropdown_colSelect_R_des_ranked_R.innerHTML = '';
+    dropdown_colSelect_R_des_ranked_C.innerHTML = '';
+    dropdown_colSelect_R_wfp_rr.innerHTML = '';
+    dropdown_colSelect_R_wfp_group.innerHTML = '';
+    dropdown_colSelect_R_sw_group.innerHTML = '';
+    multiSelect_coxmulti.innerHTML = '';
+    multiSelect_nomomulti.innerHTML = '';
+    for(let i = 0; i < colHeaders.length; i++) {
+        let opt1 = document.createElement('option');
+        let opt2 = document.createElement('option');
+        let opt3 = document.createElement('option');
+        let opt4 = document.createElement('option');
+        let opt5 = document.createElement('option');
+        let opt6 = document.createElement('option');
+        let opt7 = document.createElement('option');
+        let opt8 = document.createElement('option');
+        let opt9 = document.createElement('option');
+        let opt10 = document.createElement('option');
+        let opt11 = document.createElement('option');
+        let multiOpt = document.createElement('option');
+        let multiOpt_nomo = document.createElement('option');
+        opt1.value = colHeaders[i];
+        opt1.innerHTML = colHeaders[i];
+        opt2.value = colHeaders[i];
+        opt2.innerHTML = colHeaders[i];
+        opt3.value = colHeaders[i];
+        opt3.innerHTML = colHeaders[i];
+        opt4.value = colHeaders[i];
+        opt4.innerHTML = colHeaders[i];
+        opt5.value = colHeaders[i];
+        opt5.innerHTML = colHeaders[i];
+        opt6.value = colHeaders[i];
+        opt6.innerHTML = colHeaders[i];
+        opt7.value = colHeaders[i];
+        opt7.innerHTML = colHeaders[i];
+        opt8.value = colHeaders[i];
+        opt8.innerHTML = colHeaders[i];
+        opt9.value = colHeaders[i];
+        opt9.innerHTML = colHeaders[i];
+        opt10.value = colHeaders[i];
+        opt10.innerHTML = colHeaders[i];  
+        opt11.value = colHeaders[i];
+        opt11.innerHTML = colHeaders[i];
+        multiOpt.value = colHeaders[i];
+        multiOpt.innerHTML = colHeaders[i];
+        multiOpt_nomo.value = colHeaders[i];
+        multiOpt_nomo.innerHTML = colHeaders[i];
+        dropdown_strata_or_group.appendChild(opt1);        
+        dropdown_coxuni.appendChild(opt2);
+        dropdown_colSelect_R_des_continuous.appendChild(opt3);
+        dropdown_colSelect_R_des_continuous_by.appendChild(opt4);
+        dropdown_colSelect_R_des_count_R.appendChild(opt5);
+        dropdown_colSelect_R_des_count_C.appendChild(opt6);
+        dropdown_colSelect_R_des_ranked_R.appendChild(opt7);
+        dropdown_colSelect_R_des_ranked_C.appendChild(opt8);
+        dropdown_colSelect_R_wfp_rr.appendChild(opt9);
+        dropdown_colSelect_R_wfp_group.appendChild(opt10);
+        dropdown_colSelect_R_sw_group.appendChild(opt11);
+        multiSelect_coxmulti.appendChild(multiOpt);
+        multiSelect_nomomulti.appendChild(multiOpt_nomo);
+        //设定默认选项 - 生存分析默认 Groups or Factor
+        if(colHeaders[i] == "Groups") {
+            opt1.selected = true;
+        }
+        //设定默认选项 - 单因素Cox回归分析默认 Groups or Factor
+        if(colHeaders[i] == "Factor") {
+            opt2.selected = true;
+        }
+        //设定默认选项 - 计量资料分析变量默认 Time_to_event
+        if(colHeaders[i] == "Time_to_event") {
+            opt3.selected = true;
+        }
+        //设定默认选项 - 计量资料分组默认 Groups
+        if(colHeaders[i] == "Groups") {
+            opt4.selected = true;
+        }
+        //设定默认选项 - 计数资料分析变量默认 Event
+        if(colHeaders[i] == "Event") {
+            opt5.selected = true;
+        }
+        //设定默认选项 - 计数资料组默认 Groups or Factor
+        if(colHeaders[i] == "Factor") {
+            opt6.selected = true;
+        }
+        //设定默认选项 - 等级资料分析变量默认 Event
+        if(colHeaders[i] == "Event") {
+            opt7.selected = true;
+        }
+        //设定默认选项 - 等级资料组默认 Groups or Factor
+        if(colHeaders[i] == "Groups") {
+            opt8.selected = true;
+        }
+        //设定默认选项 - 瀑布图默认个体缓解率
+        if(colHeaders[i] == "Response_Rate") {
+            opt9.selected = true;
+        }
+        //设定默认选项 - 瀑布图默认分组
+        if(colHeaders[i] == "Groups") {
+            opt10.selected = true;
+        }
+        //设定默认选项 - 游泳图默认分组
+        if(colHeaders[i] == "Groups") {
+            opt11.selected = true;
+        }
+    }
+}
+
+
+    function copyToClipboard() {
+      var copyText = document.getElementById("Rcodes_textarea");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+    }
+
+    function checkTableCols() {
+      let colHeaders = hot.getColHeader();
+      for(let colIndex=0; colIndex<colHeaders.length; colIndex++) {
+        let colEmpty = true;
+        let skipEmptyCell = true;
+        for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
+          let cellData = hot.getDataAtCell(rowIndex, colIndex);
+          if(cellData !== null && cellData !== '') {
+            if(cellData.trim() === '') {
+              if(!skipEmptyCell) {
+                alert('请用数字填写第' + (colIndex + 1) + ' 列的空白单元格。');
+                return false;
+              }
+            } else {
+              colEmpty = false;
+              skipEmptyCell = false;
+            }
+          }
+        }
+        if(colEmpty) {
+          alert('第 ' + (colIndex + 1) + ' 列为空或填写了其他字符，请填写数据或删除该列。');
+          return false;
+        }
+      }
+      return true;
+    }
+    /* End of helper functions */
+
+    /* Helper functions to check table content */
+    function checkTableRows() {
+      if(hot.countRows() === 1) {
+        alert('悟空请不要调皮。');
+        return false;
+      }
+      return true;
+    }
+
+    function checkTableData() {
+      let rowLength = hot.countRows();
+      let colLength = hot.countCols();
+      let colHeaders = hot.getColHeader();
+
+      for(let rowIndex=0; rowIndex<rowLength; rowIndex++) {
+        for(let colIndex=0; colIndex<colLength; colIndex++) {
+          let cellData = hot.getDataAtCell(rowIndex, colIndex);
+            if(colHeaders[colIndex] === 'Response_evaluation') {
+                if(cellData === null || cellData === '' ) {
+                    alert('请填写完整的评估，"未评估"或"不适用"请填写"NE"或"NA"。请检查第 ' + (rowIndex + 1) + ' 行第 ' + (colIndex + 1) + ' 列的单元格。');
+                    return false;
+                }
+                else if(!['CR', 'PR', 'SD', 'PD', 'NE', 'NA'].includes(cellData.trim())) {
+                    alert('在 "Response_evaluation" 列中，单元格只能填入“CR”，“PR”，“SD”，“PD”，“NE”，“NA”。在第' + (colIndex + 1) + ' 列，第' + (rowIndex + 1) + ' 行存在错误输入。');
+                    return false;
+                }
+            } else if(cellData === null || cellData === '' || isNaN(Number(cellData.trim()))) {
+                alert('表格数字需要填写完整。请检查第 ' + (rowIndex + 1) + ' 行第 ' + (colIndex + 1) + ' 列的单元格是否空白或填写了非数字的字符。');
+                return false;
+            }
+        }
+      }
+      return true;
+    }
+
+    function getColor(id) {
+      var color = document.getElementById(id).value;  // 输出选择的颜色值（16 进制颜色代码） 
+    }
+
+    function genRdf() {
+      if(!checkTableCols() || !checkTableData()) {
+        return;
+      }
+      let dfCode = genDataFrameCode();
+      if(dfCode === null) {
+        return;
+      }
+      document.getElementById('Rcodes_textarea').value = dfCode;
+      copyToClipboard();
+      alert("很棒！\nR 代码已经复制到剪贴板📋。");
+    }
+
+    function genRcodes_strata_or_group() {
+        let selectedCol_strata_or_group = document.getElementById('colSelect_strata_or_group').value;
+        if(!selectedCol_strata_or_group) {
+            alert('请选择一个变量。');
+            return;
+        }
+        if((selectedCol_strata_or_group === "Patient_id") || (selectedCol_strata_or_group === "Time_to_event") || (selectedCol_strata_or_group === "Event") ) {
+            alert('请不要选择 \'Patient_id\'、\'Time_to_event\' 或 \'Event\'哦，这些是模型保留变量。');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_strata_or_group = window.R_strata_or_group;
+        rCodes_strata_or_group = rCodes_strata_or_group.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_strata_or_group = rCodes_strata_or_group.replace(/Strata_factor/g, selectedCol_strata_or_group); 
+        document.getElementById('Rcodes_textarea').value = rCodes_strata_or_group;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesCoxUni() {
+        let selectedCol_coxuni = document.getElementById('colSelect_coxuni').value;
+        if(!selectedCol_coxuni) {
+            alert('请选择一个变量。');
+            return;
+        }
+        if((selectedCol_coxuni === "Patient_id") || (selectedCol_coxuni === "Time_to_event") || (selectedCol_coxuni === "Event") ) {
+            alert('请不要选择 \'Patient_id\'、\'Time_to_event\' 或 \'Event\'哦，这些是模型保留变量。');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_coxuni = window.R_cox;
+        rCodes_coxuni = rCodes_coxuni.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_coxuni = rCodes_coxuni.replace(/Strata_factor/g, selectedCol_coxuni); 
+        rCodes_coxuni = rCodes_coxuni.replace(/Cox回归分析/g, "单因素Cox回归分析"); 
+        document.getElementById('Rcodes_textarea').value = rCodes_coxuni;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesCoxMul() {
+        let selectElement = document.getElementById('multiSelect_coxmulti');
+        let selectedOptions = Array.from(selectElement.options)
+                                    .filter(option => option.selected)
+                                    .map(option => option.value);
+        let selected_multi = selectedOptions.join(' + ');
+
+        if (selected_multi === '' || 
+            selected_multi.includes('Patient_id') || 
+            selected_multi.includes('Time_to_event') || 
+            selected_multi.includes('Event')) {
+            alert('请在多因素回归模型左侧的变量列表中，按住‘Ctrl’或‘Shift’选择多个变量。请不要选择 \'Patient_id\'、\'Time_to_event\' 或 \'Event\'哦，这些是模型保留变量。\n\n请注意，通常在进行单因素分析后会进行多因素分析，并选择 Harzad ratio 对应 P 值 < 0.05 的变量。');
+            return;
+        } 
+
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_coxmulti = window.R_cox;
+        rCodes_coxmulti = rCodes_coxmulti.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_coxmulti = rCodes_coxmulti.replace(/Strata_factor/g, selected_multi); 
+        rCodes_coxmulti = rCodes_coxmulti.replace(/Cox回归分析/g, "多因素Cox回归分析"); 
+        document.getElementById('Rcodes_textarea').value = rCodes_coxmulti;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesNomoMul() {
+      let selectElement_nomo = document.getElementById('multiSelect_nomomulti');
+      let selectedOptions_nomo = Array.from(selectElement_nomo.options)
+                                  .filter(option => option.selected)
+                                  .map(option => option.value);
+      let selected_multi_nomo = selectedOptions_nomo.join(' + ');
+
+      if (selected_multi_nomo === '' || 
+          selected_multi_nomo.includes('Time_to_event') || 
+          selected_multi_nomo.includes('Event') || 
+          selected_multi_nomo.includes('Response_evaluation')) {
+          alert('请在多因素回归模型左侧的变量列表中，按住‘Ctrl’或‘Shift’选择多个变量。请不要选择 \'Time_to_event\'、\'Event\' 或 \'Response_evaluation\' 哦，这些是模型保留变量。\n\n请注意，Nomogram的绘制通常会建议选择明确的风险因素变量。');
+          return;
+      } 
+
+      if(!checkTableCols() || !checkTableData()) {
+          return;
+      }
+      let dfCode = genDataFrameCode();
+      if(dfCode === null) {
+          return;
+      }
+
+      var rCodes_nomomulti = window.R_nomo;
+      rCodes_nomomulti = rCodes_nomomulti.replace(/df = .*?\)\n\)/s, dfCode);
+
+      // 去除selected_multi_nomo字符串的空格和加号，变为数组
+      var selected_monovars = selected_multi_nomo.replace(/\s+/g, '').split('+');
+      var monoresult = '';
+      selected_monovars.forEach(function(varName) {
+      // 对于selected_multi_nomo中的每一个变量名，找到其在dfCode中的值
+      var re = new RegExp(varName + " = c\\((-?\\d+(\\.\\d+)?).*?\\)", "g");
+      var match = re.exec(dfCode);
+      if (match) {
+        var monovalue = match[1];  // 取出括号中的数字
+        // 将匹配的字符串加入到结果中
+        monoresult += varName + " = c(" + monovalue + "), ";
+      }
+      });
+      // 删除最后的逗号和空格
+      monoresult = monoresult.slice(0, -2);
+
+
+      rCodes_nomomulti = rCodes_nomomulti.replace(/Groups\+Factor\+Response_Rate/g, selected_multi_nomo); 
+      rCodes_nomomulti = rCodes_nomomulti.replace(/GroupsFactorResponseRate/g, monoresult); 
+      document.getElementById('Rcodes_textarea').value = rCodes_nomomulti;
+      copyToClipboard();   
+      alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+      window.open('https://rdrr.io/snippets/embed/', '_blank')         
+  }
+
+    function genRcodesR_des_continuous_by() {
+        let selectedCol_R_des_continuous = document.getElementById('colSelect_R_des_continuous').value;
+        if(!selectedCol_R_des_continuous) {
+            alert('请选择一个待分析的连续变量。');
+            return;
+        }
+        let selectedCol_R_des_continuous_by = document.getElementById('colSelect_R_des_continuous_by').value;
+        if(!selectedCol_R_des_continuous_by) {
+            alert('请选择用于分组的分类变量或等级变量。');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_des_continuous = window.R_des_continuous;
+        rCodes_des_continuous = rCodes_des_continuous.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_des_continuous = rCodes_des_continuous.replace(/RDCvariate/g, selectedCol_R_des_continuous); 
+        rCodes_des_continuous = rCodes_des_continuous.replace(/RDCgroup/g, selectedCol_R_des_continuous_by); 
+        document.getElementById('Rcodes_textarea').value = rCodes_des_continuous;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesR_des_count() {
+        let selectedCol_R_des_count_R = document.getElementById('colSelect_R_des_count_R').value;
+        if(!selectedCol_R_des_count_R) {
+            alert('请选择一个待分析的分类变量。');
+            return;
+        }
+        let selectedCol_R_des_count_C = document.getElementById('colSelect_R_des_count_C').value;
+        if(!selectedCol_R_des_count_C) {
+            alert('请选择用于分组的分类变量。');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_des_count = window.R_des_count;
+        rCodes_des_count = rCodes_des_count.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_des_count = rCodes_des_count.replace(/RD_characteristic/g, selectedCol_R_des_count_R); 
+        rCodes_des_count = rCodes_des_count.replace(/RD_classfication/g, selectedCol_R_des_count_C); 
+        document.getElementById('Rcodes_textarea').value = rCodes_des_count;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesR_des_ranked() {
+        let selectedCol_R_des_ranked_R = document.getElementById('colSelect_R_des_ranked_R').value;
+        if(!selectedCol_R_des_ranked_R) {
+            alert('请选择一个待分析的等级变量。');
+            return;
+        }
+        let selectedCol_R_des_ranked_C = document.getElementById('colSelect_R_des_ranked_C').value;
+        if(!selectedCol_R_des_ranked_C) {
+            alert('请选择用于分组的分类变量。');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        var rCodes_des_ranked = window.R_des_ranked;
+        rCodes_des_ranked = rCodes_des_ranked.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_des_ranked = rCodes_des_ranked.replace(/RD_grade_value/g, selectedCol_R_des_ranked_R); 
+        rCodes_des_ranked = rCodes_des_ranked.replace(/RD_grade_group/g, selectedCol_R_des_ranked_C); 
+        document.getElementById('Rcodes_textarea').value = rCodes_des_ranked;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesR_wfplot() {
+        let selectedCol_wfp_rr = document.getElementById('colSelect_wfp_rr').value;
+        if(!selectedCol_wfp_rr) {
+            alert('请选择缓解率（%）变量。');
+            return;
+        }
+        let selectedCol_wfp_group = document.getElementById('colSelect_wfp_group').value;
+        if(!selectedCol_wfp_group) {
+            alert('请选择用于分组的分类变量。');
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) {
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        //获取调色板颜色
+        var col_wfp_cr = document.getElementById("wfp_cr").value;
+        var col_wfp_pr = document.getElementById("wfp_pr").value;
+        var col_wfp_sd = document.getElementById("wfp_sd").value;
+        var col_wfp_pd = document.getElementById("wfp_pd").value;        
+        var col_wfp_ne = document.getElementById("wfp_ne").value;
+        var col_wfp_na = document.getElementById("wfp_na").value;
+
+        var rCodes_wfp = window.R_wfplot;
+        rCodes_wfp = rCodes_wfp.replace(/df = .*?\)\n\)/s, dfCode);
+        rCodes_wfp = rCodes_wfp.replace(/Response_Rate/g, selectedCol_wfp_rr); //替换缓解率变量
+        rCodes_wfp = rCodes_wfp.replace(/addgroup = 1/g, window.wfp_group_filter);// 替换分组开关
+        rCodes_wfp = rCodes_wfp.replace(/Groups/g, selectedCol_wfp_group); //替换分组变量
+        rCodes_wfp = rCodes_wfp.replace(/#CCEAFC/g, col_wfp_cr); //替换CR颜色
+        rCodes_wfp = rCodes_wfp.replace(/#D2E8E3/g, col_wfp_pr); //替换PR颜色        
+        rCodes_wfp = rCodes_wfp.replace(/#FFE8B5/g, col_wfp_sd); //替换SD颜色   
+        rCodes_wfp = rCodes_wfp.replace(/#F4E2DE/g, col_wfp_pd); //替换PD颜色 
+        rCodes_wfp = rCodes_wfp.replace(/#5D6A73/g, col_wfp_ne); //替换NE颜色 
+        rCodes_wfp = rCodes_wfp.replace(/#C2C3BE/g, col_wfp_na); //替换NA颜色                              
+
+        document.getElementById('Rcodes_textarea').value = rCodes_wfp;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    function genRcodesR_swplot() { 
+        let selectedCol_swp = document.getElementById('colSelect_sw_group').value; 
+        if(!selectedCol_swp) {
+            alert('请选择用于分组的分类变量。'); 
+            return;
+        }
+        if(!checkTableCols() || !checkTableData()) { 
+            return;
+        }
+        let dfCode = genDataFrameCode();
+        if(dfCode === null) {
+            return;
+        }
+
+        //获取调色板颜色
+        var col_swp_cr = document.getElementById("sw_cr").value;         
+        var col_swp_pr = document.getElementById("sw_pr").value;
+        var col_swp_sd = document.getElementById("sw_sd").value;
+        var col_swp_pd = document.getElementById("sw_pd").value;        
+        var col_swp_ne = document.getElementById("sw_ne").value;
+        var col_swp_na = document.getElementById("sw_na").value;
+        var col_swp_ev = document.getElementById("sw_ev").value;
+
+        var rCodes_swp = window.R_swplot; 
+        rCodes_swp = rCodes_swp.replace(/df = .*?\)\n\)/s, dfCode); 
+        rCodes_swp = rCodes_swp.replace(/addgroup = 1/g, window.swp_group_filter);// 替换分组开关
+        rCodes_swp = rCodes_swp.replace(/Groups/g, selectedCol_swp); //替换分组变量
+        rCodes_swp = rCodes_swp.replace(/#D9E7F4/g, col_swp_cr); //替换CR颜色
+        rCodes_swp = rCodes_swp.replace(/#9FCCC2/g, col_swp_pr); //替换PR颜色        
+        rCodes_swp = rCodes_swp.replace(/#F4E0BD/g, col_swp_sd); //替换SD颜色   
+        rCodes_swp = rCodes_swp.replace(/#D8E0F0/g, col_swp_pd); //替换PD颜色 
+        rCodes_swp = rCodes_swp.replace(/#C2C3BE/g, col_swp_ne); //替换NE颜色 
+        rCodes_swp = rCodes_swp.replace(/#5D6A73/g, col_swp_na); //替换NA颜色                         
+        rCodes_swp = rCodes_swp.replace(/#594438/g, col_swp_ev); //替换Event颜色      
+
+        document.getElementById('Rcodes_textarea').value = rCodes_swp;
+        copyToClipboard();   
+        alert("很棒！\nR 代码已经复制到剪贴板📋。\n请在新弹出窗口中的顶部文本框中粘贴，并点击“运行”以查看结果吧。");
+        window.open('https://rdrr.io/snippets/embed/', '_blank')         
+    }
+
+    updateDropdown(); 
+  </script>
+</body>
+</html>
+<script>
+  window.wfp_group_filter = " ";
+  window.swp_group_filter = " ";
+
+  document.getElementById("Checkbox_wfp_group_filter").addEventListener('change', function() {
+    if(this.checked) {
+      window.wfp_group_filter = "addgroup = 1"; 
+    } else {
+      window.wfp_group_filter = "addgroup = 0"; 
+    }
+  });
+
+    document.getElementById("Checkbox_sw_group_filter").addEventListener('change', function() {
+    if(this.checked) {
+      window.swp_group_filter = "addgroup = 1"; 
+    } else {
+      window.swp_group_filter = "addgroup = 0"; 
+    }
+  });
+</script>
