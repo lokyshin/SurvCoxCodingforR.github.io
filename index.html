@@ -3,7 +3,7 @@
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>SurvCox - R Based Survival Analysis Tool</title>
+      <title>SurvCox - A R Based Survival Analysis Tool</title>
       <link rel="icon" href="fav/favicon.ico">
       <link rel="apple-touch-icon" href="fav/favicon.png">
       <link rel="icon" type="image/png" href="fav/favicon.png">
@@ -112,7 +112,7 @@
         
                 <div class="navbar-dropdown">
                     <a class="navbar-item" href="https://pysurtool.lokyshin.net" target="_blank">
-                        PySurTool
+                      <img src="img/pysurtool.png" alt="R Based SurvCox Tool" style="height: 26px; width: auto;">
                     </a>
                     <a class="navbar-item" href="https://bing.lokyshin.net" target="_blank">
                         New Bing机器人
@@ -127,15 +127,19 @@
 
         <div class="navbar-end">
             <div class="navbar-item">
-                <div class="buttons">
-                <a href="mailto:admin@lokyshin.net" class="button is-small">
-                    <span class="icon">
-                        <i class="fa fa-envelope"></i>
-                        </span>
-                        <span>联系作者</span>
-                </a>
+              
+              <a href="https://pysurtool.lokyshin.net" target="_blank">
+                <div class="level-item has-text-centered" style="display: flex; align-items: center; justify-content: left;">
+                  <h4 class="title is-7">
+                    切换到&nbsp;
+                  </h4>
+                  <img src="img/python.png" alt="A Python based survival analysis tool" height="20">
+                  <h4 class="title is-7">
+                    &nbsp;版生存分析工具
+                </h4>
                 </div>
-            </div>
+              </a>
+              </div>
         </div>
 
     </div>
@@ -149,7 +153,7 @@
           <div class="level-item has-text-centered" style="display: flex; align-items: center; justify-content: left;">
               <img src="img/survcox.png" alt="A R based survival analysis tool" width="120" height="26" style="margin-right: 10px;">
               <h4 class="title is-4">
-                  - A <img src="img/rlogo.png" height="26"> based survival analysis tool
+                  A <img src="img/rlogo.png" height="26"> based survival analysis tool
               </h4> 
           </div>
       </div>
@@ -199,6 +203,38 @@
       <div class="columns">
 
               <div class="column is-3">
+
+                <div class="block">
+                  <h5 class="title is-5">分析变量</h5>
+                </div>
+      
+                <div class="block">
+      
+                  <div class="field">
+                      <label>时间</label>
+                      <div class="control has-icons-left">
+                          <div class="select is-small">
+                              <input class="input is-small" type="text" placeholder="Time_to_event" disabled>
+                          </div>
+                          <div class="icon is-small is-left">
+                              <i class="fas fa-clock"></i>
+                          </div>
+                      </div>
+                  </div>
+      
+                  <div class="field">
+                      <label>状态(1为发生，0为缺失)</label>
+                      <div class="control has-icons-left">
+                          <div class="select is-small">
+                            <input class="input is-small" type="text" placeholder="Event" disabled>
+                          </div>
+                          <div class="icon is-small is-left">
+                              <i class="fas fa-calendar-times"></i>
+                          </div>
+                      </div>
+                  </div>
+      
+                </div>
 
                 <div class="block">
             
