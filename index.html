@@ -1271,6 +1271,28 @@
                 } else {
                   return false;
                 }
+              },
+              callback: function() {
+                  const selectedRange = this.getSelectedLast();
+                  const startCol = selectedRange[1];
+                  const endCol = selectedRange[3];
+                  const colCount = endCol - startCol + 1;
+
+                  // 获取当前列头
+                  const colHeaders = this.getColHeader().slice();  // Make a copy of the current headers
+
+                  // 根据删除的列索引从列头数组中删除相应的列头
+                  colHeaders.splice(startCol, colCount);
+
+                  // 删除选中的列
+                  for (let i = 0; i < colCount; i++) {
+                      this.alter('remove_col', startCol);
+                  }
+
+                  // 更新Handsontable的列头设置
+                  this.updateSettings({
+                      colHeaders: colHeaders
+                  });
               }
             },
           "hsep2": "---------",
