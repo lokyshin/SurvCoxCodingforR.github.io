@@ -1229,12 +1229,31 @@
           "hsep1": "---------", 
           "col_right": {
             name: '右侧添加列',
+            callback: function() {
+                const selectedRange = this.getSelectedLast();
+                const startCol = selectedRange[1];
+                const endCol = selectedRange[3];
+                const colCount = endCol - startCol + 1;
+
+                for (let i = 0; i < colCount; i++) {
+                    this.alter('insert_col', endCol + 1);
+                }
+            },
             disabled: function() {
               return this.getSelectedLast()[1] < 3; // Disable "Insert column right" if first four columns are selected
             }
           },
           "col_left": {
             name: '左侧添加列',
+            callback: function() {
+                const selectedRange = this.getSelectedLast();
+                const startCol = selectedRange[1];
+                const colCount = selectedRange[3] - startCol + 1;
+
+                for (let i = 0; i < colCount; i++) {
+                    this.alter('insert_col', startCol);
+                }
+            },
             disabled: function() {
               return this.getSelectedLast()[1] <= 3; // Disable "Insert column left" if first four columns are selected
             }
@@ -1255,8 +1274,32 @@
               }
             },
           "hsep2": "---------",
-          "row_below": {name:'下方添加行'},
-          "row_above": {name:'上方添加行'},
+          "row_below": {
+                name: '下方添加行',
+                callback: function() {
+                    const selectedRange = this.getSelectedLast();
+                    const startRow = selectedRange[0];
+                    const endRow = selectedRange[2];
+                    const rowCount = endRow - startRow + 1;
+
+                    for (let i = 0; i < rowCount; i++) {
+                        this.alter('insert_row', endRow + 1);
+                    }
+                }
+            },
+          "row_above": {
+                name: '上方添加行',
+                callback: function() {
+                    const selectedRange = this.getSelectedLast();
+                    const startRow = selectedRange[0];
+                    const rowCount = selectedRange[2] - startRow + 1;
+
+                    for (let i = 0; i < rowCount; i++) {
+                        this.alter('insert_row', startRow);
+                    }
+                }
+            },
+
                     "remove_row": {
                name: '删除行',
             disabled: function() {
