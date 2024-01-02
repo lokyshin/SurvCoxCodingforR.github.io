@@ -31,7 +31,7 @@
 
   <nav class="navbar has-shadow is-fixed-top" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
-        <a class="navbar-item" href="https://survcox.lokyshin.net">
+        <a class="navbar-item" href="https://survcox.lokyshin.cn">
             <img src="img/survcox.png" alt="A R based survival analysis tool" width="98" height="28">
         </a>
         <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbar">
@@ -43,7 +43,10 @@
 
     <div id="navbar" class="navbar-menu">
         <div class="navbar-start">
-              <a class="navbar-item" href="https://survcox.lokyshin.net">
+              <a class="navbar-item" href="https://lokyshin.cn">
+                <span class="icon">
+                    <i class="fas fa-home"></i>
+                  </span>&nbsp;
                 首页
               </a>
 
@@ -111,8 +114,8 @@
                 </a>
         
                 <div class="navbar-dropdown">
-                    <a class="navbar-item" href="https://pysurtool.lokyshin.net" target="_blank">
-                      <img src="img/pysurtool.png" alt="R Based SurvCox Tool" style="height: 26px; width: auto;">
+                    <a class="navbar-item" href="https://pysurtool.lokyshin.cn" target="_blank">
+                      <img src="img/pysurtool.png" alt="Python Based SurvCox Tool" style="height: 26px; width: auto;">
                     </a>
                     <a class="navbar-item" href="https://chat.lokyshin.net" target="_blank">
                         科研定制ChatGPT
@@ -125,7 +128,7 @@
         <div class="navbar-end">
             <div class="navbar-item">
               
-              <a href="https://pysurtool.lokyshin.net" target="_blank">
+              <a href="https://pysurtool.lokyshin.cn" target="_blank">
                 <div class="level-item has-text-centered" style="display: flex; align-items: center; justify-content: left;">
                   <h4 class="title is-7">
                     切换到&nbsp;
@@ -1178,7 +1181,7 @@
 </div>
        
 <div class="content is-small has-text-centered">
-  <p><br>基于R的生存分析工具集 by <a href="https://lokyshin.net">Lokyshin</a></p>
+  <p><br>基于R的生存分析工具集 by <a href="https://lokyshin.cn">Lokyshin</a></p>
 </div>  
 </body>
 </html>
@@ -1450,7 +1453,7 @@
       for(let rowIndex=0; rowIndex<hot.countRows(); rowIndex++) {
         let cellData = hot.getDataAtCell(rowIndex, colIndex);
         if(cellData !== null && cellData !== '') {
-          // Check if cellData is not a number, if not, add single quotes around it
+          // Check if cellData is not a number, if not, add shingle quotes around it
           if(isNaN(Number(cellData.trim()))) {
             cellData = `'${cellData}'`;
           }
