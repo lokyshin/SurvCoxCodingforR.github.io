@@ -170,7 +170,7 @@
         <div class="control">
           <div class="tags has-addons">
             <span class="tag is-dark">build</span>
-            <span class="tag is-success">202306</span>
+            <span class="tag is-success">202407</span>
           </div>
         </div>
     </div>
@@ -1219,16 +1219,62 @@
       colHeaders: ["Patient_id", "Time_to_event", "Event", "Groups", "Factor", "Response_Rate", "Response_evaluation"],
       contextMenu: {
         items: {
-          "copy": {name:'复制 | Ctrl + C'},
-          "cut": {name:'剪切 | Ctrl + X'},
+          "copy": {name:'复制 | Ctrl 或 Cmd + C'},
+          "cut": {name:'剪切 | Ctrl 或 Cmd + X'},
           "paste": {
-            name:'粘贴 | 因浏览器限制请使用 Ctrl + V',
-            disabled: function() { 
-              return true; 
+            name: '粘贴 | Ctrl 或 Cmd + V',
+            callback: function() {
+              const clipboard = navigator.clipboard;
+              clipboard.readText().then(text => {
+                const selected = this.getSelected();
+                if (selected) {
+                  const [startRow, startCol, endRow, endCol] = selected[0];
+                  const clipboardData = text.split('\n').map(row => row.split('\t'));
+                  
+                  // 计算需要添加的行数和列数
+                  const neededRows = startRow + clipboardData.length - this.countRows();
+                  const neededCols = startCol + clipboardData[0].length - this.countCols();
+                  
+                  // 如果需要，添加新行
+                  if (neededRows > 0) {
+                    this.alter('insert_row', this.countRows(), neededRows);
+                  }
+                  
+                  // 如果需要，添加新列
+                  if (neededCols > 0) {
+                    this.alter('insert_col', this.countCols(), neededCols);
+                    
+                    // 为新列添加列头
+                    const currentHeaders = this.getColHeader();
+                    for (let i = 0; i < neededCols; i++) {
+                      let newColName = "New_col" + (currentHeaders.length + i + 1);
+                      while (currentHeaders.includes(newColName)) {
+                        newColName = "New_col" + (currentHeaders.length + i + 2);
+                      }
+                      currentHeaders.push(newColName);
+                    }
+                    this.updateSettings({ colHeaders: currentHeaders });
+                  }
+                  
+                  // 粘贴数据
+                  for (let r = 0; r < clipboardData.length; r++) {
+                    for (let c = 0; c < clipboardData[r].length; c++) {
+                      this.setDataAtCell(startRow + r, startCol + c, clipboardData[r][c]);
+                    }
+                  }
+                  
+                  // 如果添加了新列，更新下拉菜单
+                  if (neededCols > 0) {
+                    updateDropdown();
+                  }
+                }
+              }).catch(err => {
+                console.error('无法读取剪贴板: ', err);
+              });
             }
           },
-          "undo": {name:'撤销 | Ctrl + Z'},
-          "redo": {name:'重做 | Ctrl + Y'},
+          "undo": {name:'撤销 | Ctrl 或 Cmd + Z'},
+          "redo": {name:'重做 | Ctrl 或 Cmd + Y'},
           "hsep1": "---------", 
           "col_right": {
             name: '右侧添加列',
@@ -1412,6 +1458,8 @@
         updateDropdown(); 
       },
     });
+
+    
 
   var customUndoStack = [];
 
